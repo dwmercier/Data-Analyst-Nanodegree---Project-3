@@ -18,21 +18,22 @@ import re
 lower = re.compile(r'^([a-z]|_)*$')
 lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
 problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
+# TODO: Write a new regex statement for distinguishing French names and characters
 
 # Path to dataset
-filename = 'ottawa_canada_sample.osm'
-
+filename = 'ottawa_canada_sample_small.osm'
+tree = ET.parse(filename)
+root = tree.getroot()  
 
 def count_tags(filename):
     '''
+    Take a count of all the different tag types in the file.
     Iterate over all elements and their children, add unique tags
     to the tag_counts dictionary and set their value to 0 using the 
-    setdefault() method, then add 1 to the tag's value for each occurrence 
+    setdefault() method. Add 1 to the tag's value for each occurrence 
     of the tag.
     '''
 
-    tree = ET.parse(filename)
-    root = tree.getroot()  
     tag_counts = {}
 
     for child in root.iter():
@@ -42,7 +43,11 @@ def count_tags(filename):
     return tag_counts
 
 
-def key_type(element, keys):
+# TODO: Add functionality for distinguishing French addresses
+def filter_key_types(element, keys):
+    '''
+    Filter each tag's address tag by character type. 
+    '''
     if element.tag == "tag":
         tag_k = element.get('k')
 
@@ -62,25 +67,21 @@ def key_type(element, keys):
 
 
 def process_tags(filename):
+    '''
+    Return a count of each address tag by character type. Uses filter_key_types.
+    '''
     keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "other": 0}
     for _, element in ET.iterparse(filename):
-        keys = key_type(element, keys)
+        keys = filter_key_types(element, keys)
 
     return keys
 
-"""
-Your task is to explore the data a bit more.
-The first task is a fun one - find out how many unique users
-have contributed to the map in this particular area!
 
-The function process_map should return a set of unique user IDs ("uid")
-"""
-
-def get_user(element):
-    return
-
-
+### Users is not particularly useful information, will probably remove in future
 def process_users(filename):
+    '''
+    Returns a set of unique user IDs ("uid")
+    '''
     users = set()
     uids = []
 
@@ -105,7 +106,6 @@ def main():
                         format=' %(asctime)s - %(levelname)s - %(message)s'
                         )
     
-
     def test_count_tags():
 
         tags = count_tags(filename)
@@ -114,10 +114,7 @@ def main():
 
     
     def test_tags():
-        # You can use another testfile 'map.osm' to look at your solution
-        # Note that the assertion below will be incorrect then.
-        # Note as well that the test function here is only used in the Test Run;
-        # when you submit, your code will be checked against a different dataset.
+
         keys = process_tags(filename)
         logging.debug(pprint.pformat('Tag type Counts:',))
         logging.debug(pprint.pformat(keys))
