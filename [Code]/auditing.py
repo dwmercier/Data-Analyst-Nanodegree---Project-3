@@ -44,11 +44,8 @@ expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concessio
 ### Helper functions
 
 def print_sorted_dict_alpha(street_types):
-    keys = street_types.keys()
-    keys = sorted(keys, key=lambda s: s.lower())
-    for k in keys:
-        v = street_types[k]
-        print("%s: %d" % (k, v))
+    for s in sorted(street_types.keys(), key=lambda s: s.lower()):
+        print(s, street_types[s])
 
 
 def print_sorted_dict_frequency(street_types):
@@ -57,29 +54,21 @@ def print_sorted_dict_frequency(street_types):
 
 
 def sort_dict_alphabetically(street_types):
-    keys = street_types.keys()
-    keys = sorted(keys, key=lambda s: s.lower())
-    for k in keys:
-        v = street_types[k]
-        yield(k, v)
+    for s in sorted(street_types.keys(), key=lambda s: s.lower()):
+        yield(s, street_types[s])
 
 
 def sort_dict_by_frequency(street_types):
-    for w in sorted(street_types, key=street_types.get, reverse=True):
-        yield(w, street_types[w])
-
-### ORIGINAL
-# def is_street_name(elem):
-#     return (elem.attrib['k'] == "addr:street")
+    for s in sorted(street_types, key=street_types.get, reverse=True):
+        yield(s, street_types[s])
 
 
-### FROM GENERATED
 def is_street_name(elem):
-    return (elem.tag == "tag") and (elem.attrib['k'] == "addr:street")
+    return (elem.attrib['k'] == "addr:street")
 
 
-def audit_street_type(street_types, street_name, expected, regex):
-    m = street_type_re_french.search(street_name)
+def audit_street_type(street_types, street_name, expected, street_regex):
+    m = street_regex.search(street_name)
 
     if m:
         street_type = m.group()
@@ -111,15 +100,12 @@ def audit_street_type_filtered(street_types, street_name):
     split_street_name = street_name.split()
     street_pos_english = street_type_re_english.search(split_street_name[-1])
     street_pos_english = street_pos_english.group()
-    street_pos_french = split_street_name[0]
+    street_pos_french = street_type_re_french.search(split_street_name[0])
+    street_pos_french = street_pos_french.group()
     
     if street_pos_english not in expected_english:
-          if street_pos_french not in expected_french:
+        if street_pos_french not in expected_french:
             street_types[street_pos_english] += 1     
-    # if street_pos_english not in expected_english and street_pos_french not in expected_french:
-    #     # if street_pos_french not in expected_french:
-    #         street_types[street_pos_english] += 1   
-
 
 
 ### Main functions
@@ -129,29 +115,17 @@ def audit(filename):
     ### ORIGINAL
     # street_types = defaultdict(set) # this variable show up twice
 
-    # for event, elem in ET.iterparse(filename, events=("start",)):
-    #     if elem.tag == "node" or elem.tag == "way":
-    #         for tag in elem.iter("tag"):
-    #             if is_street_name(tag):
-    #                 # audit_street_type_filtered(street_types, elem.attrib['v'])
-    #                 # audit_street_type_english(street_types, elem.attrib['v'])
-    #                 # audit_street_type_english(street_types, elem.attrib['v'])
-    #                 # audit_street_type(street_types, elem.attrib['v'], 
-    #                                   # expected_english, street_type_re_french)
-    #         print_sorted_dict_alpha(street_types)
-    #         print_sorted_dict_frequency(street_types)
- 
+    for event, elem in ET.iterparse(filename, events=("start",)):
+        if elem.tag == "node" or elem.tag == "way":
+            for tag in elem.iter("tag"):
+                if is_street_name(tag):
+                    # audit_street_type(street_types, tag.attrib['v'], 
+                    #                     expected_english, street_type_re_english)
 
-    ### FROM GENERATED
-    for event, elem in ET.iterparse(filename):
-        if is_street_name(elem):
-            # audit_street_type(street_types, elem.attrib['v'], 
-            #                     expected_english, street_type_re_english)
+                    # audit_street_type(street_types, tag.attrib['v'], 
+                    #                     expected_french, street_type_re_french)
 
-            # audit_street_type(street_types, elem.attrib['v'], 
-            #                     expected_french, street_type_re_french)
-
-            audit_street_type_filtered(street_types, elem.attrib['v'])
+                    audit_street_type_filtered(street_types, tag.attrib['v'])
     
     # pprint.pprint(list(sort_dict_alphabetically(street_types)))
     # print_sorted_dict_alpha(street_types)
@@ -164,6 +138,7 @@ def main():
 
     import logging
     import os
+
     
     filename = "ottawa_canada_sample_small.osm" # TODO: Change to relative path before submission
 
@@ -172,6 +147,7 @@ def main():
                         filename=os.path.basename(__file__) + ' - log.txt',level=logging.DEBUG,
                         format=' %(asctime)s - %(levelname)s - %(message)s'
                         )
+    
     #TODO: resolve logging vs. pprint output
     # def test_audit():
         # logging.debug(pprint.pformat(audit(filename)))
@@ -179,6 +155,7 @@ def main():
         # logging.debug(pprint.pformat('Special Cases:'))
         # logging.debug(pprint.pformat(audit(filename)))
     
+    logging.debug(pprint.pformat(list(sort_dict_alphabetically(audit(filename)))))
     logging.debug(pprint.pformat(list(sort_dict_by_frequency(audit(filename)))))
     # test_audit()
 
