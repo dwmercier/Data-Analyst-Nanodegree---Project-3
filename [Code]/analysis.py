@@ -48,7 +48,7 @@ def filter_key_types(element, keys):
 
 ### Main functions
 
-def count_tags(filename):
+def count_tags_by_element(filename):
     '''
     Take a count of all the different tag types in the file.
     Iterate over all elements and their children, add unique tags
@@ -66,23 +66,28 @@ def count_tags(filename):
     return tag_counts
 
 
-def process_tags(filename):
+def count_tags_by_char_content(filename):
     '''
     Return a count of each address tag by character type. Uses filter_key_types as helper function.
     '''
-    keys = {"lower": 0, "lower_colon": 0, "problemchars": 0, "frenchchars": 0, "other": 0}
+    keys = {"lower": 0,
+            "lower_colon": 0,
+            "problemchars": 0, 
+            "frenchchars": 0, 
+            "other": 0
+            }
+            
     for _, element in ET.iterparse(filename):
         keys = filter_key_types(element, keys)
 
     return keys
 
 
-def process_users(filename):
+def list_users(filename, uids=[]):
     '''
     Returns a set of unique user IDs ("uid")
     '''
     users = set()
-    uids = []
 
     for _, element in ET.iterparse(filename):
         if element.get('uid'):
@@ -111,29 +116,29 @@ def main():
 
     # Test functions for main functions
 
-    def test_count_tags():
+    def test_count_tags_by_element():
 
-        tags = count_tags(filename)
+        tags = count_tags_by_element(filename)
         logging.debug(pprint.pformat('Tag Counts:',))
         logging.debug(pprint.pformat(tags))
 
-    def test_process_tags():
+    def test_count_tags_by_char_content():
 
-        keys = process_tags(filename)
+        keys = count_tags_by_char_content(filename)
         logging.debug(pprint.pformat('Tag type Counts:',))
         logging.debug(pprint.pformat(keys))
 
 
-    def test_users():
+    def test_list_users():
 
-        users = process_users(filename)
+        users = list_users(filename)
         logging.debug(pprint.pformat('Users:',))
         logging.debug(pprint.pformat(users))
 
 
-    test_count_tags()
-    test_process_tags()
-    test_users()
+    test_count_tags_by_element()
+    test_count_tags_by_char_content()
+    test_list_users()
 
 if __name__ == "__main__":
     main()
