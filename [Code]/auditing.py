@@ -18,12 +18,12 @@ from collections import defaultdict
 import re
 import pprint
 
+street_types = defaultdict(int)
 
 ### Regex filters
 street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
 street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE) # this range covers a large swathe of the Latin character set - reduce to French only?
 # street_type_re_french_detect = re.compile(r'[\u00D9-\u00FF]')
-street_types = defaultdict(int)
 
 # TODO: lists need to have certain types verified (refer to types count file)
 # TODO: expand mappings with special cases
@@ -41,21 +41,32 @@ expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concessio
 
 
 
-
 ### Helper functions
 
-def print_sorted_dict_alpha(d):
-    keys = d.keys()
+def print_sorted_dict_alpha(street_types):
+    keys = street_types.keys()
     keys = sorted(keys, key=lambda s: s.lower())
-    # pprint.pprint(keys)
-    # for k in keys:
-    #     v = d[k]
-    #     print("%s: %d" % (k, v))
+    for k in keys:
+        v = street_types[k]
+        print("%s: %d" % (k, v))
 
-def print_sorted_dict_frequency(d):
-    for w in sorted(d, key=d.get, reverse=True):
-        # yield (w, d[w])
-        print(w, d[w])
+
+def print_sorted_dict_frequency(street_types):
+    for w in sorted(street_types, key=street_types.get, reverse=True):
+        print(w, street_types[w])
+
+
+def sort_dict_alphabetically(street_types):
+    keys = street_types.keys()
+    keys = sorted(keys, key=lambda s: s.lower())
+    for k in keys:
+        v = street_types[k]
+        yield(k, v)
+
+
+def sort_dict_by_frequency(street_types):
+    for w in sorted(street_types, key=street_types.get, reverse=True):
+        yield(w, street_types[w])
 
 ### ORIGINAL
 # def is_street_name(elem):
@@ -98,7 +109,8 @@ def check_dataset():
 def audit_street_type_filtered(street_types, street_name):
     
     split_street_name = street_name.split()
-    street_pos_english = split_street_name[-1]
+    street_pos_english = street_type_re_english.search(split_street_name[-1])
+    street_pos_english = street_pos_english.group()
     street_pos_french = split_street_name[0]
     
     if street_pos_english not in expected_english:
@@ -133,17 +145,16 @@ def audit(filename):
     ### FROM GENERATED
     for event, elem in ET.iterparse(filename):
         if is_street_name(elem):
-            audit_street_type(street_types, elem.attrib['v'], 
-                                expected_english, street_type_re_english)
+            # audit_street_type(street_types, elem.attrib['v'], 
+            #                     expected_english, street_type_re_english)
 
-            audit_street_type(street_types, elem.attrib['v'], 
-                                expected_french, street_type_re_french)
+            # audit_street_type(street_types, elem.attrib['v'], 
+            #                     expected_french, street_type_re_french)
 
             audit_street_type_filtered(street_types, elem.attrib['v'])
     
-        # logging.debug(pprint.pformat(print_sorted_dict_alpha(street_types)))
-    print_sorted_dict_frequency(street_types)
-    print_sorted_dict_alpha(street_types)
+    # pprint.pprint(list(sort_dict_alphabetically(street_types)))
+    # print_sorted_dict_alpha(street_types)
 
     return street_types
 
@@ -162,15 +173,14 @@ def main():
                         format=' %(asctime)s - %(levelname)s - %(message)s'
                         )
     #TODO: resolve logging vs. pprint output
-    def test_audit():
-        # pprint.pprint(audit(filename))
-        audit(filename)   
+    # def test_audit():
+        # logging.debug(pprint.pformat(audit(filename)))
         # logging.debug(pprint.pformat('Special Cases:'))
         # logging.debug(pprint.pformat('Special Cases:'))
         # logging.debug(pprint.pformat(audit(filename)))
     
-
-    test_audit()
+    logging.debug(pprint.pformat(list(sort_dict_by_frequency(audit(filename)))))
+    # test_audit()
 
 
 if __name__ == '__main__':
