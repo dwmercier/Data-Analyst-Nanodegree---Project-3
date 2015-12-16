@@ -2,7 +2,10 @@
 # -*- coding: utf-8 -*-
 # TODO: add file description
 # TODO: combine overview with auditing?
+"""
+Your task in this exercise has two steps:
 
+"""
 import xml.etree.cElementTree as ET
 from collections import defaultdict
 import re
@@ -31,6 +34,106 @@ expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concessio
                    'Croissant', 'Principale', 'Parkway', 'Terrace', 'Concourse', ]
 
 unexpected = []
+
+
+# Regular expressions for categorizing tag content format
+lower = re.compile(r'^([a-z]|_)*$')
+lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
+problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
+#TODO: refine or remove frenchchars
+frenchchars = re.compile(r'[\u00D9-\u00FF]') # Subset of Latin charset - rough and inaccurate
+
+
+
+### Helper Functions
+
+def filter_key_types(element, keys):
+    '''
+    Filter each tag's address tag by character type.
+    '''
+    if element.tag == "tag":
+        tag_k = element.get('k')
+
+        if frenchchars.search(element.get('v')):
+            keys['frenchchars'] +=1
+
+        elif lower.search(tag_k):
+            keys['lower'] +=1
+
+        elif lower_colon.search(tag_k):
+            keys['lower_colon'] +=1
+
+        elif problemchars.search(tag_k):
+            keys['problemchars'] +=1
+
+        else:
+            keys['other'] +=1
+
+    return keys
+
+
+### Main functions
+
+def count_tags_by_element(filename):
+    '''
+    Take a count of all the different tag types in the file.
+    Iterate over all elements and their children, add unique tags
+    to the tag_counts dictionary and set their value to 0 using the
+    setdefault() method. Add 1 to the tag's value for each occurrence
+    of the tag.
+    '''
+
+    tag_counts = {}
+
+    for _, element in ET.iterparse(filename):
+        tag_counts.setdefault(element.tag, 0)
+        tag_counts[element.tag] += 1
+
+    return tag_counts
+
+
+def count_tags_by_char_content(filename):
+    '''
+    Return a count of each address tag by character type. Uses filter_key_types as helper function.
+    '''
+    keys = {"lower": 0,
+            "lower_colon": 0,
+            "problemchars": 0, 
+            "frenchchars": 0, 
+            "other": 0
+            }
+            
+    for _, element in ET.iterparse(filename):
+        keys = filter_key_types(element, keys)
+
+    return keys
+
+
+def list_users(filename, uids=[]):
+    '''
+    Returns a set of unique user IDs ("uid")
+    '''
+    users = set()
+
+    for _, element in ET.iterparse(filename):
+        if element.get('uid'):
+            uid = element.get('uid')
+            uids.append(str(uid))
+
+    users = set(uids)
+
+    return users
+
+
+
+
+
+
+
+
+
+
+
 
 ### Helper functions
 
@@ -151,6 +254,35 @@ def main():
         logging.debug(pprint.pformat(list(sort_dict_alphabetically(audit_by_frequency(filename)))))
         logging.debug(pprint.pformat(list(sort_dict_by_frequency(audit_by_frequency(filename)))))
     
+
+
+
+
+        # Test functions for main functions
+
+    def test_count_tags_by_element():
+
+        tags = count_tags_by_element(filename)
+        logging.debug(pprint.pformat('Tag Counts:',))
+        logging.debug(pprint.pformat(tags))
+
+    def test_count_tags_by_char_content():
+
+        keys = count_tags_by_char_content(filename)
+        logging.debug(pprint.pformat('Tag type Counts:',))
+        logging.debug(pprint.pformat(keys))
+
+
+    def test_list_users():
+
+        users = list_users(filename)
+        logging.debug(pprint.pformat('Users:',))
+        logging.debug(pprint.pformat(users))
+
+
+    test_count_tags_by_element()
+    test_count_tags_by_char_content()
+    test_list_users()
     # Run test functions
     test_audit()
 
