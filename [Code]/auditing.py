@@ -21,16 +21,25 @@ street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE) # this range cover
 
 ### Expected Street type lists
 
-expected_english =['Street', 'Road', 'Drive', 'Avenue', 'Crescent', 'Way', 'Court', 
-           'Place', 'Lane', 'Private', 'Boulevard', 'Circle', 'Terrace', 'North', 
-           'West', 'East', 'South', 'Sideroad', 'Garden', 'Ridge', 'Park', 'Front', 
-           'Plateau', 'Main', 'Walk', 'Gate', 'Line', 'Trail', 'Driveway']
+expected_english =['Street', 'Road', 'Drive', 'Avenue', 'Crescent', 'Way', 'Court',
+                   'Place', 'Lane', 'Private', 'Boulevard', 'Circle', 'Terrace', 'North',
+                   'West', 'East', 'South', 'Sideroad', 'Garden', 'Ridge', 'Park', 'Front',
+                   'Plateau', 'Main', 'Walk', 'Gate', 'Line', 'Trail', 'Driveway', 'Green',
+                   'Square', 'Grove', 'Bay', 'Square', 'Heights', 'Row']
 
-expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concession', 
-                   'Route', 'Sideroad', 'Montée', 'Promenade', 'Place', 'Voyageur', 
-                   'Croissant', 'Principale', 'Parkway', 'Terrace', 'Concourse', ]
 
-unexpected = []
+
+# Unique (but valid) names: McCrearys Beach, Beck Shore, MacKenzie King Bridge, Swilken Burn, Cookes Shore
+#                           Marble Canyon, Royal County Down (missing Crescent), Fairglen Mews, Linda Loop,
+#                           McCulloughs Landing, Grasshopper Point, Saville Row
+
+# Unique but invalid (could not find in google maps) names: Chamney Shore, Champagne Street Extension
+#   Sheppard Close,
+expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concession',
+                   'Route', 'Sideroad', 'Montée', 'Promenade', 'Place', 'Voyageur',
+                   'Croissant', 'Principale', 'Parkway', 'Terrace', 'Concourse','Allée' ]
+
+expected = expected_english + expected_french
 
 
 # Regular expressions for categorizing tag content format
@@ -48,7 +57,7 @@ def filter_key_types(element, keys):
     if element.tag == "tag":
         tag_k = element.get('k')
 
-        elif lower.search(tag_k):
+        if lower.search(tag_k):
             keys['lower'] +=1
 
         elif lower_colon.search(tag_k):
