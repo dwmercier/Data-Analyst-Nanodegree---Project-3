@@ -229,7 +229,7 @@ def update_street_name(address_name):
 
 def clean_whitespace(address_name):
     address_name = address_name.strip()
-    address_name = re.sub(r'\  *', ' ', address_name)
+    address_name = re.sub(r'(( ) +)', ' ', address_name)
 
     return address_name
 
