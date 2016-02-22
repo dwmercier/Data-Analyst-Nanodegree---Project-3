@@ -1,9 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # TODO: add file description
-# TODO: combine overview with auditing?
+
 """
-Your task in this exercise has two steps:
 
 """
 import xml.etree.cElementTree as ET
@@ -17,10 +16,8 @@ street_types_set = defaultdict(set)
 ### Regex filters
 street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
 street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE) # this range covers a large swathe of the Latin character set - reduce to French only?
-# street_type_re_french_detect = re.compile(r'[\u00D9-\u00FF]')
 
-# TODO: lists need to have certain types verified (refer to types count file)
-# TODO: expand mappings with special cases
+# ToDo: expand mappings with special cases?
 
 ### Expected Street type lists
 
@@ -40,9 +37,6 @@ unexpected = []
 lower = re.compile(r'^([a-z]|_)*$')
 lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
 problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
-#TODO: refine or remove frenchchars
-frenchchars = re.compile(r'[\u00D9-\u00FF]') # Subset of Latin charset - rough and inaccurate
-
 
 
 ### Helper Functions
@@ -53,9 +47,6 @@ def filter_key_types(element, keys):
     '''
     if element.tag == "tag":
         tag_k = element.get('k')
-
-        if frenchchars.search(element.get('v')):
-            keys['frenchchars'] +=1
 
         elif lower.search(tag_k):
             keys['lower'] +=1
@@ -99,7 +90,6 @@ def count_tags_by_char_content(filename):
     keys = {"lower": 0,
             "lower_colon": 0,
             "problemchars": 0, 
-            "frenchchars": 0, 
             "other": 0
             }
             
@@ -125,27 +115,7 @@ def list_users(filename, uids=[]):
     return users
 
 
-
-
-
-
-
-
-
-
-
-
 ### Helper functions
-
-# def print_sorted_dict_alpha(street_types_frequency):
-#     for s in sorted(street_types_frequency.keys(), key=lambda s: s.lower()):
-#         print(s, street_types_frequency[s])
-
-
-# def print_sorted_dict_frequency(street_types_frequency):
-#     for w in sorted(street_types_frequency, key=street_types_frequency.get, reverse=True):
-#         print(w, street_types_frequency[w])
-
 
 def sort_dict_alphabetically(street_types_frequency):
     for s in sorted(street_types_frequency.keys(), key=lambda s: s.lower()):
@@ -208,13 +178,14 @@ def audit_by_frequency(filename):
         if elem.tag == "node" or elem.tag == "way":
             for tag in elem.iter("tag"):
                 if is_street_name(tag):
-                    streets_by_frequency(street_types_frequency, tag.attrib['v'], 
-                                        expected_english, street_type_re_english)
+                    streets_by_frequency(street_types_frequency,
+                                         tag.attrib['v'],
+                                         expected_english,
+                                         street_type_re_english)
     
     return street_types_frequency
 
 
-# TODO: Output needs to be in dictionary or json format
 def audit_by_type(filename):
     '''
     Returns a dictionary of unique street types, with each street type containing
@@ -224,8 +195,10 @@ def audit_by_type(filename):
         if elem.tag == "node" or elem.tag == "way":
             for tag in elem.iter("tag"):
                 if is_street_name(tag):
-                    streets_by_type(street_types_set, tag.attrib['v'], 
-                                        expected_french, street_type_re_french)
+                    streets_by_type(street_types_set,
+                                    tag.attrib['v'],
+                                    expected_french,
+                                    street_type_re_french)
 
     return street_types_set
 
@@ -249,14 +222,10 @@ def main():
     #TODO: resolve logging vs. pprint output
     def test_audit():
         # logging.debug(pprint.pformat('Special Cases:'))
-        logging.debug(pprint.pformat(audit_by_type(filename)))
-        logging.debug(pprint.pformat(audit_by_frequency(filename)))
-        logging.debug(pprint.pformat(list(sort_dict_alphabetically(audit_by_frequency(filename)))))
-        logging.debug(pprint.pformat(list(sort_dict_by_frequency(audit_by_frequency(filename)))))
-    
-
-
-
+        # logging.debug(pprint.pformat(audit_by_type(filename)))
+        # logging.debug(pprint.pformat(audit_by_frequency(filename)))
+        # logging.debug(pprint.pformat(list(sort_dict_alphabetically(audit_by_frequency(filename)))))
+        # logging.debug(pprint.pformat(list(sort_dict_by_frequency(audit_by_frequency(filename)))))
 
         # Test functions for main functions
 
