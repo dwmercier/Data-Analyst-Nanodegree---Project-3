@@ -52,6 +52,9 @@ move_cardinal_regexes = {
     'North' : re.compile(r'(North[^\w]|North$)')
 }
 
+city_regexes = [
+    [re.compile(r'.*of\s|.*Of\s'), '']
+]
 # ToDo: Convert French street type regexes into list and dict format
 # French regex matching patterns
 ave_pattern_french = re.compile(r'\s?Rue\.?\s|\sRue\.?$|') # Avenue
@@ -164,16 +167,22 @@ def shape_element(element):
 
 # ToDo: the hierarchy of function execution in the cleaning process needs to be sorted out
 def update_element(address_type, address_name):
+
+
+
     if address_type[5:] == 'street':
 
         address_name = fix_cardinal_direction(address_name)
         address_name = update_street_name(address_name)
-        print(address_type, address_name)
+        # print(address_type, address_name)
 
         return address_name
 
-    # if address_type[5:] == 'city':
-    #
+    if address_type[5:] == 'city':
+
+        address_name = compact_city_name(address_name)
+
+        return address_name
     # elif address_type[5:] == 'housenumber':
     #
     # elif address_type[5:] == 'interpolation':
@@ -181,7 +190,17 @@ def update_element(address_type, address_name):
     # else:
     #
 
+    clean_whitespace(address_name)
     return address_name
+
+def compact_city_name(city_name):
+    for r in city_regexes:
+        m = r[0].search(city_name)
+
+        if m:
+            city_name = re.sub(r[0], r[1], city_name)
+
+    return city_name
 
 
 def fix_cardinal_direction(address_name):
@@ -220,7 +239,9 @@ def update_street_name(address_name):
         m = r[0].search(address_name)
 
         if m:
-            address_name = address_name.replace(str(m.group()), ' ' + r[1])
+            # ToDo: see if it's worthile to switch all .replace statements with .sub statements
+            # address_name = address_name.replace(str(m.group()), ' ' + r[1])
+            address_name = re.sub(r[0], ' ' + r[1], address_name)
 
             return address_name
 
@@ -245,7 +266,9 @@ def capitalize_street(address_name):
         else:
             word_list.append(word)
 
-    return ' '.join(word_list)
+    address_name = ' '.join(word_list)
+
+    return address_name
 
 
 def clean(address_type, address_name):
@@ -283,6 +306,18 @@ def process_map(file_in, pretty = False):
 def test():
     # ToDo: Finish assertion tests
     # Test shape_element function
+    # assert shape_element(
+    #     <node changeset="6223495" id="969421551" lat="45.3839697" lon="-75.9596713" timestamp="2010-10-30T00:03:00Z" uid="186592" user="Johnwhelan" version="1">
+		# <tag k="source" v="CanVec 6.0 - NRCan" />
+		# <tag k="addr:city" v="City of Ottawa" />
+		# <tag k="addr:street" v="O'hara Drive" />
+		# <tag k="addr:housenumber" v="19" />
+    # </node>
+    # ) ==
+
+    # Test compact_city_name
+    assert compact_city_name('City of Ottawa') == 'Ottawa'
+    assert compact_city_name('Township Of Tay Valley') == 'Tay Valley'
 
     # Test update_element function
 
@@ -310,7 +345,7 @@ def test():
 
 def main():
     test()
-    filename = "ottawa_canada_sample_tiny.osm"
+    filename = "ottawa_canada_sample.osm"
 
     process_map(filename, True)
 
