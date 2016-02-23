@@ -117,29 +117,24 @@ def shape_element(element):
 
         for child in element:
             if child.tag == 'tag':
-                address = child.attrib
+                tag = child.attrib
+                tag_key = tag['k']
+                tag_value = tag['v']
                 address_state = node.get('address')
 
                 if address_state == None:
                     node['address'] = {}
 
                 else:
-                    if 'addr:' in address['k']:
-                        '''
-                        Check for extended address information. If true, skip over
-                        the entry, otherwise add the address to node.
-                        '''
-                        if len(re.findall(r':', address['k'])) > 1:
-                            continue
+                    if 'addr:' in tag_key:
+                        if check_for_extended_addr(tag_key) == False:
+                            cleaned_tag = clean(tag_key, tag_value)
+                            node['address'][tag_key[5:]] = cleaned_tag
 
-                        else:
-                            cleaned_address = clean(address['k'], address['v'])
-                            node['address'][address['k'][5:]] = cleaned_address
+                    elif "addr:" not in tag_key:
+                        node[tag_key] = tag_value
 
-                    elif "addr:" not in address['k']:
-                        node[address['k']] = address['v']
-
-                    elif problemchars.search(address['k']):
+                    elif problemchars.search(tag_key):
                         continue
 
             if child.tag == 'nd':
@@ -164,8 +159,16 @@ def shape_element(element):
 
 
 ### Helper Functinos
-
 # ToDo: the hierarchy of function execution in the cleaning process needs to be sorted out
+
+def check_for_extended_addr(tag_key):
+    '''
+    Check if the addr value in the tag_key has more than one colon.
+    '''
+
+    return len(re.findall(r':', tag_key)) > 1
+
+
 def update_element(address_type, address_name):
 
 
@@ -345,7 +348,7 @@ def test():
 
 def main():
     test()
-    filename = "ottawa_canada_sample.osm"
+    filename = "ottawa_canada_sample_tiny.osm"
 
     process_map(filename, True)
 
