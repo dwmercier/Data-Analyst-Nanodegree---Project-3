@@ -77,6 +77,8 @@ north_pattern_french = re.compile(r'(Nord[^\w]|Nord$)')
 # General regex matching patterns
 lower = re.compile(r'^([a-z]|_)*$')
 lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
+problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
+
 double_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*:([a-z]|_)*$') # ToDo: (A) remove of incorporate
 
 
@@ -122,20 +124,19 @@ def shape_element(element):
                 tag_value = tag['v']
                 address_state = node.get('address')
 
-                if address_state == None:
+                if problemchars.search(tag_key):
+
+                    continue
+
+                if address_state == None and 'addr:' in tag_key:
                     node['address'] = {}
 
-                else:
-                    if 'addr:' in tag_key:
-                        if check_for_extended_addr(tag_key) == False:
-                            cleaned_tag = clean(tag_key, tag_value)
-                            node['address'][tag_key[5:]] = cleaned_tag
+                if 'addr:' in tag_key and check_for_extended_addr(tag_key) == False:
+                    cleaned_tag = clean_tag(tag_key, tag_value)
+                    node['address'][tag_key[5:]] = cleaned_tag
 
-                    elif "addr:" not in tag_key:
-                        node[tag_key] = tag_value
-
-                    elif problemchars.search(tag_key):
-                        continue
+                elif 'addr:' not in tag_key:
+                    node[tag_key] = tag_value
 
             if child.tag == 'nd':
                 '''
@@ -169,60 +170,48 @@ def check_for_extended_addr(tag_key):
     return len(re.findall(r':', tag_key)) > 1
 
 
-def update_element(address_type, address_name):
+def update_tag(tag_key, tag_value):
+    if tag_key[5:] == 'street':
+        tag_value = update_street_name(tag_value)
+        tag_value = fix_cardinal_direction(tag_value)
+
+        return tag_value
+
+    if tag_key[5:] == 'city':
+        tag_value = compact_city_name(tag_value)
+
+        return tag_value
+
+    return tag_value
 
 
-
-    if address_type[5:] == 'street':
-
-        address_name = fix_cardinal_direction(address_name)
-        address_name = update_street_name(address_name)
-        # print(address_type, address_name)
-
-        return address_name
-
-    if address_type[5:] == 'city':
-
-        address_name = compact_city_name(address_name)
-
-        return address_name
-    # elif address_type[5:] == 'housenumber':
-    #
-    # elif address_type[5:] == 'interpolation':
-    #
-    # else:
-    #
-
-    clean_whitespace(address_name)
-    return address_name
-
-def compact_city_name(city_name):
+def compact_city_name(tag_value):
     for r in city_regexes:
-        m = r[0].search(city_name)
+        m = r[0].search(tag_value)
 
         if m:
-            city_name = re.sub(r[0], r[1], city_name)
+            tag_value = re.sub(r[0], r[1], tag_value)
 
-    return city_name
+    return tag_value
 
 
-def fix_cardinal_direction(address_name):
+def fix_cardinal_direction(tag_value):
     for r in cardinal_regexes:
-        m = r[0].search(address_name)
+        m = r[0].search(tag_value)
 
         if m:
-            address_name = address_name.replace(str(m.group()), ' ' + r[1])
+            tag_value = address_name.replace(str(m.group()), ' ' + r[1])
 
-        elif move_cardinal_regexes[r[1]].search(address_name):
-            address_name = move_cardinal_direction(address_name, r[1])
+        elif move_cardinal_regexes[r[1]].search(tag_value):
+            tag_value = move_cardinal_direction(tag_value, r[1])
 
-            return address_name
+            return tag_value
 
         else:
-            return address_name
+            return tag_value
 
 
-def move_cardinal_direction(address_name, cardinal_direction):
+def move_cardinal_direction(tag_value, cardinal_direction):
 
     # for r in move_cardinal_regexes:
     #     m = r[0].search(address_name)
@@ -232,54 +221,54 @@ def move_cardinal_direction(address_name, cardinal_direction):
     #
     #         return address_name
 
-    address_name = cardinal_direction + ' ' + (address_name.replace(' ' + cardinal_direction, ''))
+    tag_value = cardinal_direction + ' ' + (tag_value.replace(' ' + cardinal_direction, ''))
 
-    return address_name
+    return tag_value
 
 
-def update_street_name(address_name):
+def update_street_name(tag_value):
     for r in type_regexes:
-        m = r[0].search(address_name)
+        m = r[0].search(tag_value)
 
         if m:
             # ToDo: see if it's worthile to switch all .replace statements with .sub statements
             # address_name = address_name.replace(str(m.group()), ' ' + r[1])
-            address_name = re.sub(r[0], ' ' + r[1], address_name)
+            tag_value = re.sub(r[0], ' ' + r[1], tag_value)
 
-            return address_name
+            return tag_value
 
-    return address_name
-
-
-def clean_whitespace(address_name):
-    address_name = address_name.strip()
-    address_name = re.sub(r'(( ) +)', ' ', address_name)
-
-    return address_name
+    return tag_value
 
 
-def capitalize_street(address_name):
-    split_address_name = address_name.split()
+def remove_whitespace(tag_value):
+    tag_value = tag_value.strip()
+    tag_value = re.sub(r'(( ) +)', ' ', tag_value)
+
+    return tag_value
+
+
+def capitalize_tag(tag_value):
+    split_tag = tag_value.split()
     word_list = []
 
-    for word in split_address_name:
+    for word in split_tag:
         if word[0].islower():
             word_list.append(word[0].upper() + word[1:].lower())
 
         else:
             word_list.append(word)
 
-    address_name = ' '.join(word_list)
+    tag_value = ' '.join(word_list)
 
-    return address_name
+    return tag_value
 
 
-def clean(address_type, address_name):
-    address_name = clean_whitespace(address_name)
-    address_name = update_element(address_type, address_name)
-    address_name = capitalize_street(address_name)
+def clean_tag(tag_key, tag_value):
+    tag_value = remove_whitespace(tag_value)
+    tag_value = update_tag(tag_key, tag_value)
+    tag_value = capitalize_tag(tag_value)
 
-    return address_name
+    return tag_value
 
 
 def process_map(file_in, pretty = False):
@@ -328,22 +317,22 @@ def test():
 
     # Test move_cardinal_direction function
 
-    # Test clean_whitespace function
-    assert clean_whitespace('Baker  Street') == 'Baker Street'
-    assert clean_whitespace('Baker   Street') == 'Baker Street'
-    assert clean_whitespace(' Baker   Street ') == 'Baker Street'
+    # Test remove_whitespace function
+    assert remove_whitespace('Baker  Street') == 'Baker Street'
+    assert remove_whitespace('Baker   Street') == 'Baker Street'
+    assert remove_whitespace(' Baker   Street ') == 'Baker Street'
 
     # Test update_street_name function
 
-    # Test capitalize_street function
-    # assert capitalize_street('baker Street') == 'Baker Street'
-    # assert capitalize_street('south baker street') == 'South Baker Street'
+    # Test capitalize_tag function
+    # assert capitalize_tag('baker Street') == 'Baker Street'
+    # assert capitalize_tag('south baker street') == 'South Baker Street'
 
     # Test clean function
-    # assert clean('addr:street', 'Chanonhouse St.') == 'Chanonhouse Street'
-    # assert clean('addr:street', 'St. Jerome St.') == 'St. Jerome Street'
-    # assert clean('addr:street', 'South Ash Ln ') == 'South Ash Lane'
-    # assert clean('addr:street', 'Baker Street South') == 'South Baker Street'
+    # assert clean_tag('addr:street', 'Chanonhouse St.') == 'Chanonhouse Street'
+    # assert clean_tag('addr:street', 'St. Jerome St.') == 'St. Jerome Street'
+    # assert clean_tag('addr:street', 'South Ash Ln ') == 'South Ash Lane'
+    # assert clean_tag('addr:street', 'Baker Street South') == 'South Baker Street'
     pass
 
 def main():
