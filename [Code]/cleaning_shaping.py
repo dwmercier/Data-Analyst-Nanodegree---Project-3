@@ -184,10 +184,12 @@ def update_tag(tag_key, tag_value):
 
 def update_city_name(tag_value):
     for r in city_regexes:
-        m = r[0].search(tag_value)
+        regex = r[0]
+        replacement = r[1]
+        match = regex.search(tag_value)
 
-        if m:
-            tag_value = re.sub(r[0], r[1], tag_value)
+        if match:
+            tag_value = re.sub(regex, replacement, tag_value)
 
     return tag_value
 
@@ -196,10 +198,10 @@ def update_cardinal_direction(tag_value):
     for r in cardinal_regexes:
         regex = r[0]
         replacement = r[1]
-        m = regex.search(tag_value)
+        match = regex.search(tag_value)
 
-        if m:
-            tag_value = tag_value.replace(str(m.group()), ' ' + replacement)
+        if match:
+            tag_value = tag_value.replace(str(match.group()), ' ' + replacement)
 
         if move_cardinal_regexes[replacement].search(tag_value):
             tag_value = move_cardinal_direction(tag_value, replacement)
@@ -218,12 +220,14 @@ def move_cardinal_direction(tag_value, replacement):
 
 def update_street_type(tag_value):
     for r in type_regexes:
-        m = r[0].search(tag_value)
+        regex = r[0]
+        replacement = r[1]
+        match = r[0].search(tag_value)
 
-        if m:
+        if match:
             # ToDo: see if it's worthile to switch all .replace statements with .sub statements
             # address_name = address_name.replace(str(m.group()), ' ' + r[1])
-            tag_value = re.sub(r[0], ' ' + r[1], tag_value)
+            tag_value = re.sub(regex, ' ' + replacement, tag_value)
 
             return tag_value
 
