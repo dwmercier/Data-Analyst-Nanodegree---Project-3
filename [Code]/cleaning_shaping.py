@@ -110,18 +110,17 @@ def shape_element(element):
 
 
         for child in element:
-            # ToDo: Model if and elif statements after for a in attributes workflow
+            # ToDo: Model if and elif statements after for a in attributes workflow?
             if child.tag == 'tag':
                 tag = child.attrib
                 tag_key = tag['k']
                 tag_value = tag['v']
-                address_state = node.get('address')
 
                 if problemchars.search(tag_key):
 
                     continue
 
-                if address_state == None and 'addr:' in tag_key:
+                if node.get('address') == None and 'addr:' in tag_key:
                     node['address'] = {}
 
                 if 'addr:' in tag_key and check_for_extended_addr(tag_key) == False:
@@ -131,20 +130,17 @@ def shape_element(element):
                 elif 'addr:' not in tag_key:
                     node[tag_key] = tag_value
 
-            if child.tag == 'nd':
-                # ToDo: BUG - even if there are multiple node references only the first one is added
+            elif child.tag == 'nd':
                 '''
                 Check if any node_refs entries exist in the node dictionary. If not
                 create node_refs entry and add the value of nd to it. Otherwise just append
                 the value of nd.
                 '''
-                nd_state = node.get('node_refs')
 
-                if nd_state == None:
-                    node['node_refs'] = {}
+                if node.get('node_refs') == None:
+                    node['node_refs'] = []
 
-                else:
-                    node['node_refs'] = [child.attrib['ref']]
+                node['node_refs'].append(child.attrib['ref'])
 
         return node
 
