@@ -13,13 +13,6 @@ import json
 
 # TODO: How to separate English street names that happen to be in expected_french (e.g Concession Road)?
 
-
-# apt_num = re.compile(r'(Suite|Ste)\s?([-0-9A-Z]+)')
-# addr_num = re.compile(r'([0-9]+)[^a-z]\s?')
-# no_prefix_num = re.compile(r'[0-9]')
-# postcode_num = re.compile('\d\d\d\d\d')
-# state_name = re.compile(r'nv|nevada', re.IGNORECASE)
-
 # Unsure: Heights, Landing, Green, Loop, Grove, Pathway, Rand, Path, Bay, Row, Shore, Promenade(English), Allée, Square, Canyon
 # All
 # Edge Cases: 10e Avenue Ouest, {'Regional Road 174'}, Highway 15, {'prom. des Aubépine Dr.'}, 'County Road 11', Old Highway 17'
@@ -78,9 +71,6 @@ lower = re.compile(r'^([a-z]|_)*$')
 lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
 problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
 
-double_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*:([a-z]|_)*$') # ToDo: (A) remove of incorporate
-
-
 
 ### Main functions
 
@@ -89,7 +79,7 @@ def shape_element(element):
     created = [ "version", "changeset", "timestamp", "user", "uid"]
     pos = ['lat', 'lon']
     node = {}
-    node['pos'] = [0,0]
+    pos_state = node.get('pos')
     node['created'] = dict()
 
 
@@ -97,24 +87,30 @@ def shape_element(element):
         node['type'] = element.tag
         attributes = element.attrib
 
-        for a in attributes: # this refers to the top level elements of the node
-            if a in top_level_tags:
-                node[a]= attributes[a]
-# ToDo: BUG: pos also gets added to entries that don't originally have a pos; might want to check out all top-level tags
-            elif a in pos:
-                if a == 'lon':
-                    node['pos'][1] = (float(attributes[a]))
+        for a in attributes:  # this refers to the top level elements of the node or way
+            if a in pos:
+                if node.get('pos') == None:
+                    node['pos'] = [0,0]
 
-                elif a == 'lat':
-                    node['pos'][0] = (float(attributes[a]))
+                if node.get('pos'):
+                    if a == 'lat':
+                        node['pos'][0] = (float(attributes[a]))
+
+                    elif a == 'lon':
+                        node['pos'][1] = (float(attributes[a]))
+
+            elif a in top_level_tags:
+                node[a] = attributes[a]
 
             elif a in created:
                 node['created'][a] = attributes[a]
 
             else:
-                node[a]= attributes[a]
+                node[a] = attributes[a]
+
 
         for child in element:
+            # ToDo: Model if and elif statements after for a in attributes workflow
             if child.tag == 'tag':
                 tag = child.attrib
                 tag_key = tag['k']
@@ -136,6 +132,7 @@ def shape_element(element):
                     node[tag_key] = tag_value
 
             if child.tag == 'nd':
+                # ToDo: BUG - even if there are multiple node references only the first one is added
                 '''
                 Check if any node_refs entries exist in the node dictionary. If not
                 create node_refs entry and add the value of nd to it. Otherwise just append
@@ -161,7 +158,7 @@ def shape_element(element):
 
 def check_for_extended_addr(tag_key):
     '''
-    Check if the addr value in the tag_key has more than one colon.
+    Check if the addr value in tag_key has more than one colon.
     '''
 
     return len(re.findall(r':', tag_key)) > 1
@@ -377,7 +374,7 @@ def test_functions():
 def main():
     filename = "ottawa_canada_sample_tiny.osm"
 
-    test_functions()
+    # test_functions()
 
     process_map(filename, True)
 
