@@ -10,40 +10,12 @@ from collections import defaultdict
 import re
 import pprint
 
+
+# Globals
+
 street_types_frequency = defaultdict(int)
 street_types_set = defaultdict(set)
-city_names_type = set()
-
-### Regex filters
-street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
-street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE)
-street_type_re = re.compile(r'(^\S+\.?\s)|(\s\S+\.?$)', re.IGNORECASE)
-
-# street_type_re_french_detect = re.compile(r'[\u00D9-\u00FF]')
-
-# ToDo: expand mappings with special cases?
-
-### Expected Street type lists
-
-expected_english =['Street', 'Road', 'Drive', 'Avenue', 'Crescent', 'Way', 'Court',
-                   'Place', 'Lane', 'Private', 'Boulevard', 'Circle', 'Terrace', 'North',
-                   'West', 'East', 'South', 'Sideroad', 'Garden', 'Ridge', 'Park', 'Front',
-                   'Plateau', 'Main', 'Walk', 'Gate', 'Line', 'Trail', 'Driveway', 'Green',
-                   'Square', 'Grove', 'Bay', 'Square', 'Heights', 'Row']
-
-
-
-# Unique (but valid) names: McCrearys Beach, Beck Shore, MacKenzie King Bridge, Swilken Burn, Cookes Shore
-#                           Marble Canyon, Royal County Down (missing Crescent), Fairglen Mews, Linda Loop,
-#                           McCulloughs Landing, Grasshopper Point, Saville Row
-
-# Unique but invalid (could not find in google maps) names: Chamney Shore, Champagne Street Extension
-#   Sheppard Close,
-expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concession',
-                   'Route', 'Sideroad', 'Montée', 'Promenade', 'Place', 'Voyageur',
-                   'Croissant', 'Principale', 'Parkway', 'Terrace', 'Concourse','Allée' ]
-
-expected = expected_english + expected_french
+city_names_list = set()
 
 
 # Regular expressions for categorizing tag content format
@@ -52,8 +24,52 @@ lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
 problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
 extra_spaces = re.compile(r'(( ) +)')
 
+# Language regexes
+street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
+street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE)
+street_type_re = re.compile(r'(^\S+\.?)|(\S+\.?$)', re.IGNORECASE)
 
-### Helper Functions
+# Expected Street type lists
+
+expected_english =['Street', 'Road', 'Drive', 'Avenue', 'Crescent', 'Way', 'Court',
+                   'Place', 'Lane', 'Private', 'Boulevard', 'Circle', 'Terrace', 'North',
+                   'West', 'East', 'South', 'Sideroad', 'Garden', 'Ridge', 'Park', 'Front',
+                   'Plateau', 'Main', 'Walk', 'Gate', 'Line', 'Trail', 'Driveway', 'Green',
+                   'Square', 'Grove', 'Bay', 'Square', 'Heights', 'Row']
+
+expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concession',
+                   'Route', 'Sideroad', 'Montée', 'Promenade', 'Place', 'Voyageur',
+                   'Croissant', 'Principale', 'Parkway', 'Terrace', 'Concourse','Allée']
+
+expected = expected_english + expected_french
+
+
+### Helper functions
+
+# ToDo: Check if this is necessary - I believe sets sort alphabetically by default
+def sort_alphabetically(street_types_frequency):
+    for s in sorted(street_types_frequency.keys(), key=lambda s: s.lower()):
+        yield(s, street_types_frequency[s])
+
+
+def sort_by_frequency(street_types_frequency):
+    for s in sorted(street_types_frequency, key=street_types_frequency.get, reverse=True):
+        yield(s, street_types_frequency[s])
+
+
+# def sort_by_frequency_2(street_types_set):
+#     # print(street_types_set)
+#     for s in sorted(street_types_set, key=street_types_set.get, reverse=True):
+#         yield(s, street_types_set[s])
+
+
+def is_street_name(elem):
+    return (elem.attrib['k'] == "addr:street")
+
+
+def is_city_name(elem):
+    return (elem.attrib['k'] == "addr:city")
+
 
 def filter_key_types(element, keys):
     '''
@@ -133,32 +149,6 @@ def list_users(filename, uids=[]):
     return users
 
 
-### Helper functions
-
-def sort_dict_alphabetically(street_types_frequency):
-    for s in sorted(street_types_frequency.keys(), key=lambda s: s.lower()):
-        yield(s, street_types_frequency[s])
-
-
-def sort_dict_by_frequency(street_types_frequency):
-    for s in sorted(street_types_frequency, key=street_types_frequency.get, reverse=True):
-        yield(s, street_types_frequency[s])
-
-
-def sort_dict_by_frequency_2(street_types_set):
-    print(street_types_set)
-    for s in sorted(street_types_set, key=street_types_set.get, reverse=True):
-        yield(s, street_types_set[s])
-
-
-def is_street_name(elem):
-    return (elem.attrib['k'] == "addr:street")
-
-
-# def get_street_type(street_name):
-
-# ToDo: decide on best way to look over address and determine street type - use regex matching or stick with the nested ifs below?
-
 def check_unexpected_street_types(sort_type, street_name):
     '''
     Checks if any of the expected street types appear in the street
@@ -222,7 +212,10 @@ def check_unexpected_street_types(sort_type, street_name):
 #             street_types_frequency[street_name_french] += 1
 #
 #     return street_types_frequency
+
+
 def check_expected_street_types(sort_type, street_name, language):
+
     match = language.search(street_name)
 
     if match:
@@ -321,7 +314,24 @@ def check_expected_street_types(sort_type, street_name, language):
 #
 #     return street_types_frequency, street_types_set
 
+
+def parse_output(street_types_frequency, street_types_set, city_names_list):
+    if len(street_types_frequency) > 1:
+        ranked_street_types = list(sort_by_frequency(street_types_frequency))
+        return ranked_street_types
+
+    elif len(street_types_set) > 1:
+        return street_types_set
+
+    elif len(city_names_list) > 1:
+        return city_names_list
+
+
 def audit(filename, sort_type, filter, language):
+    global street_types_frequency
+    global street_types_set
+    global city_names_list
+
     for event, elem in ET.iterparse(filename, events=("start",)):
         if elem.tag == "node" or elem.tag == "way":
             for tag in elem.iter("tag"):
@@ -333,18 +343,24 @@ def audit(filename, sort_type, filter, language):
                     if filter == 'expected':
                         check_expected_street_types(sort_type, tag.attrib['v'], language)
 
-                elif is_city_name(tag):
-                    city_names_type.add(tag.attrib['v'])
+                elif filter == 'city':
+                    if is_city_name(tag):
+                        city_names_list.add(tag.attrib['v'])
 
-    return street_types_frequency, street_types_set, city_names_type
+    results = parse_output(street_types_frequency, street_types_set, city_names_list)
+
+    # Reset global variables
+    street_types_frequency = defaultdict(int)
+    street_types_set = defaultdict(set)
+    city_names_list = set()
+
+    return results
+
 
 
 ###### Return City names code
-
-
-
-# def city_names_by_type(city_names_type, city_name):
-#     city_names_type.add(city_name)
+# def city_names_by_type(city_names_list, city_name):
+#     city_names_list.add(city_name)
 #
 # def is_city_name(elem):
 #     return (elem.attrib['k'] == "addr:city")
@@ -354,11 +370,9 @@ def audit(filename, sort_type, filter, language):
 #         if elem.tag == "node" or elem.tag == "way":
 #             for tag in elem.iter("tag"):
 #                 if is_city_name(tag):
-#                     city_names_type.add(tag.attrib['v'])
+#                     city_names_list.add(tag.attrib['v'])
 #
-#
-#
-#     return city_names_type
+#     return city_names_list
 
 
 ### Main
@@ -368,11 +382,11 @@ def main():
     import os
 
     filename = "ottawa_canada_sample.osm" # TODO: Change to relative path before submission
-    language = 'English' \
-               ''
+    language = 'English'
+
     # logging.disable(logging.CRITICAL) # Uncomment to disable logging
     logging.basicConfig(filemode='w',
-                        filename=os.path.basename(__file__) + ' - log.txt',level=logging.DEBUG,
+                        filename=os.path.basename(__file__) + ' - output.txt',level=logging.DEBUG,
                         format=' %(asctime)s - %(levelname)s - %(message)s'
                         )
 
@@ -447,10 +461,14 @@ def main():
 
 
     def test_audit(filename, sort_type, filter, language):
+        print('\n' + "Running audit on " + filename)
+        print("Sorting by: " + sort_type)
+        print("Filtering by: " + filter)
+        print("Regex language is: " + str(language)+ '\n')
         output = audit(filename, sort_type, filter, language)
         # pprint.pformat('Unexpected (by frequency):',)
         # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
-        logging.debug(pprint.pformat(output))
+        pprint.pprint(output)
 
     # test_count_tags_by_element()
     # test_count_tags_by_char_content()
@@ -481,6 +499,12 @@ def main():
 
     # test_audit_unexpected_types('type')
     # test_audit_unexpected_types('frequency')
-    test_audit(filename, 'type', 'expected', street_type_re_french)
+    test_audit(filename, 'frequency', 'expected', street_type_re_french)
+    test_audit(filename, 'frequency', 'expected', street_type_re_english)
+    test_audit(filename, 'frequency', 'expected', street_type_re)
+
+    # test_audit(filename, 'type', 'expected', street_type_re)
+    # test_audit(filename, 'frequency', 'unexpected', street_type_re)
+    # test_audit(filename, 'frequency', 'city', street_type_re)
 if __name__ == '__main__':
     main()
