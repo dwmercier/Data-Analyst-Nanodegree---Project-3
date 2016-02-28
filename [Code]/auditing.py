@@ -27,7 +27,6 @@ extra_spaces = re.compile(r'(( ) +)')
 # Language regexes
 street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
 street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE)
-street_type_re = re.compile(r'(^\S+\.?)|(\S+\.?$)', re.IGNORECASE)
 
 # Expected Street type lists
 
@@ -215,8 +214,11 @@ def check_unexpected_street_types(sort_type, street_name):
 
 
 def check_expected_street_types(sort_type, street_name, language):
+    if language == 'English':
+        match = street_type_re_english.search(street_name)
 
-    match = language.search(street_name)
+    if language == 'French':
+        match = street_type_re_french.search(street_name)
 
     if match:
         street_type = match.group()
@@ -499,12 +501,8 @@ def main():
 
     # test_audit_unexpected_types('type')
     # test_audit_unexpected_types('frequency')
-    test_audit(filename, 'frequency', 'expected', street_type_re_french)
-    test_audit(filename, 'frequency', 'expected', street_type_re_english)
-    test_audit(filename, 'frequency', 'expected', street_type_re)
+    test_audit(filename, 'frequency', 'unexpected', 'English')
+    test_audit(filename, 'frequency', 'unexpected', 'French')
 
-    # test_audit(filename, 'type', 'expected', street_type_re)
-    # test_audit(filename, 'frequency', 'unexpected', street_type_re)
-    # test_audit(filename, 'frequency', 'city', street_type_re)
 if __name__ == '__main__':
     main()
