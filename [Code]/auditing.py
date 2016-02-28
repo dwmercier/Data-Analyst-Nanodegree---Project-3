@@ -12,6 +12,7 @@ import pprint
 
 street_types_frequency = defaultdict(int)
 street_types_set = defaultdict(set)
+city_names_type = set()
 
 ### Regex filters
 street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
@@ -183,23 +184,6 @@ def check_unexpected_street_types(sort_type, street_name):
         elif sort_type == 'frequency':
             street_types_frequency[street_name] += 1
 
-    # if street_name_english not in expected:
-    #     if street_name_french not in expected:
-    #         if sort_type == 'type':
-    #             sort_type[street_name_english].add(street_name)
-    #
-    #         if sort_type == 'frequency':
-    #             sort_type[street_name_english] += 1
-    #
-    # if street_name_french not in expected:
-    #     if street_name_english not in expected:
-    #         if sort_type == 'type':
-    #             sort_type[street_name_french].add(street_name)
-    #
-    #         if sort_type == 'frequency':
-    #             sort_type[street_name_french] += 1
-
-
 # def unexpected_streets_by_type(street_types, street_name):
 #     '''
 #     Checks if a street belongs to the expected French or English street
@@ -220,7 +204,6 @@ def check_unexpected_street_types(sort_type, street_name):
 #     return street_types_set
 #
 #
-# # TODO:  Is regex necessary here? Also normal string comparisons in Python
 # def unexpected_streets_by_frequency(street_types_frequency, street_name):
 #     '''
 #     Checks if a street belongs to the expected French or English street
@@ -239,57 +222,68 @@ def check_unexpected_street_types(sort_type, street_name):
 #             street_types_frequency[street_name_french] += 1
 #
 #     return street_types_frequency
+def check_expected_street_types(sort_type, street_name, language):
+    match = language.search(street_name)
 
+    if match:
+        street_type = match.group()
 
-def streets_by_type(street_types_set, street_name, street_regex):
-    m = street_regex.search(street_name)
-
-    if m:
-        street_type = m.group()
         if street_type in expected:
-            street_types_set[street_type].add(street_name)
+            if sort_type == 'type':
+                street_types_set[street_type].add(street_name)
 
+            elif sort_type == 'frequency':
+                street_types_frequency[street_type] += 1
 
-def streets_by_frequency(street_types_frequency, street_name, street_regex):
-    m = street_regex.search(street_name)
-
-    if m:
-        street_type = m.group()
-        if str(street_type) in expected:
-            street_types_frequency[street_type] += 1
+# def streets_by_type(street_types_set, street_name, street_regex):
+#     m = street_regex.search(street_name)
+#
+#     if m:
+#         street_type = m.group()
+#         if street_type in expected:
+#             street_types_set[street_type].add(street_name)
+#
+#
+# def streets_by_frequency(street_types_frequency, street_name, street_regex):
+#     m = street_regex.search(street_name)
+#
+#     if m:
+#         street_type = m.group()
+#         if str(street_type) in expected:
+#             street_types_frequency[street_type] += 1
 
 
 ### Main functions
-def audit_by_frequency(filename):
-    '''
-    Returns a list of tuples containing the street type and the number
-    of times the street type appears in the dataset.
-    '''
-    for event, elem in ET.iterparse(filename, events=("start",)):
-        if elem.tag == "node" or elem.tag == "way":
-            for tag in elem.iter("tag"):
-                if is_street_name(tag):
-                    streets_by_frequency(street_types_frequency,
-                                         tag.attrib['v'],
-                                         street_type_re_english)
-
-    return street_types_frequency
-
-
-def audit_by_type(filename):
-    '''
-    Returns a dictionary of unique street types, with each street type containing
-    a sub-dictionary of the full names of every street of that type.
-    '''
-    for event, elem in ET.iterparse(filename, events=("start",)):
-        if elem.tag == "node" or elem.tag == "way":
-            for tag in elem.iter("tag"):
-                if is_street_name(tag):
-                    streets_by_type(street_types_set,
-                                    tag.attrib['v'],
-                                    street_type_re_english)
-
-    return street_types_set
+# def audit_by_frequency(filename):
+#     '''
+#     Returns a list of tuples containing the street type and the number
+#     of times the street type appears in the dataset.
+#     '''
+#     for event, elem in ET.iterparse(filename, events=("start",)):
+#         if elem.tag == "node" or elem.tag == "way":
+#             for tag in elem.iter("tag"):
+#                 if is_street_name(tag):
+#                     streets_by_frequency(street_types_frequency,
+#                                          tag.attrib['v'],
+#                                          street_type_re_english)
+#
+#     return street_types_frequency
+#
+#
+# def audit_by_type(filename):
+#     '''
+#     Returns a dictionary of unique street types, with each street type containing
+#     a sub-dictionary of the full names of every street of that type.
+#     '''
+#     for event, elem in ET.iterparse(filename, events=("start",)):
+#         if elem.tag == "node" or elem.tag == "way":
+#             for tag in elem.iter("tag"):
+#                 if is_street_name(tag):
+#                     streets_by_type(street_types_set,
+#                                     tag.attrib['v'],
+#                                     street_type_re_english)
+#
+#     return street_types_set
 
 
 # def audit_by_unexpected_type(filename):
@@ -318,37 +312,53 @@ def audit_by_type(filename):
 #     return street_types_frequency
 
 
-def audit_by_unexpected(filename, sort_type):
+# def audit_by_unexpected(filename, sort_type):
+#     for event, elem in ET.iterparse(filename, events=("start",)):
+#         if elem.tag == "node" or elem.tag == "way":
+#             for tag in elem.iter("tag"):
+#                 if is_street_name(tag):
+#                     check_unexpected_street_types(sort_type, tag.attrib['v'])
+#
+#     return street_types_frequency, street_types_set
+
+def audit(filename, sort_type, filter, language):
     for event, elem in ET.iterparse(filename, events=("start",)):
         if elem.tag == "node" or elem.tag == "way":
             for tag in elem.iter("tag"):
                 if is_street_name(tag):
-                    check_unexpected_street_types(sort_type, tag.attrib['v'])
 
-    return street_types_frequency, street_types_set
+                    if filter == 'unexpected':
+                        check_unexpected_street_types(sort_type, tag.attrib['v'])
 
+                    if filter == 'expected':
+                        check_expected_street_types(sort_type, tag.attrib['v'], language)
+
+                elif is_city_name(tag):
+                    city_names_type.add(tag.attrib['v'])
+
+    return street_types_frequency, street_types_set, city_names_type
 
 
 ###### Return City names code
 
-city_names_type = set()
-
-def city_names_by_type(city_names_type, city_name):
-    city_names_type.add(city_name)
-
-def is_city_name(elem):
-    return (elem.attrib['k'] == "addr:city")
-
-def audit_cities(filename):
-    for event, elem in ET.iterparse(filename, events=("start",)):
-        if elem.tag == "node" or elem.tag == "way":
-            for tag in elem.iter("tag"):
-                if is_city_name(tag):
-                    city_names_type.add(tag.attrib['v'])
 
 
-
-    return city_names_type
+# def city_names_by_type(city_names_type, city_name):
+#     city_names_type.add(city_name)
+#
+# def is_city_name(elem):
+#     return (elem.attrib['k'] == "addr:city")
+#
+# def audit_cities(filename):
+#     for event, elem in ET.iterparse(filename, events=("start",)):
+#         if elem.tag == "node" or elem.tag == "way":
+#             for tag in elem.iter("tag"):
+#                 if is_city_name(tag):
+#                     city_names_type.add(tag.attrib['v'])
+#
+#
+#
+#     return city_names_type
 
 
 ### Main
@@ -399,48 +409,48 @@ def main():
         logging.debug(pprint.pformat(users))
 
 
-    def test_audit_by_unexpected_type():
-
-        unexpected_type = audit_by_unexpected_type(filename)
-        logging.debug(pprint.pformat('Unexpected (by type):',))
-        logging.debug(pprint.pformat(unexpected_type))
-
-
-    def test_audit_by_type():
-
-        expected_type = audit_by_type(filename)
-        logging.debug(pprint.pformat('Expected (by type):',))
-        logging.debug(pprint.pformat(expected_type))
-
-
-    def test_audit_by_frequency():
-
-        expected_frequency = audit_by_frequency(filename)
-        logging.debug(pprint.pformat('Expected (by frequency):',))
-        logging.debug(pprint.pformat(expected_frequency))
-
-
-    def test_audit_by_unexpected_frequency():
-
-        unexpected_frequency = audit_by_unexpected_frequency(filename)
-        logging.debug(pprint.pformat('Unexpected (by frequency):',))
-        # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
-        logging.debug(pprint.pformat(unexpected_frequency))
-
-
-
-    def test_audit_unexpected_types(sort_type):
-        unexpected_types = audit_by_unexpected(filename, sort_type)
-        # pprint.pformat('Unexpected (by frequency):',)
-        # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
-        logging.debug(pprint.pformat(unexpected_types))
-
-
-    # def test_audit_by_unexpected_type_single_regex():
-
-    #     unexpected_type = audit_by_unexpected_type_single_regex(filename)
+    # def test_audit_by_unexpected_type():
+    #
+    #     unexpected_type = audit_by_unexpected_type(filename)
     #     logging.debug(pprint.pformat('Unexpected (by type):',))
     #     logging.debug(pprint.pformat(unexpected_type))
+
+    # def test_audit_by_unexpected_frequency():
+    #
+    #     unexpected_frequency = audit_by_unexpected_frequency(filename)
+    #     logging.debug(pprint.pformat('Unexpected (by frequency):',))
+    #     # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
+    #     logging.debug(pprint.pformat(unexpected_frequency))
+
+    # def test_audit_by_type():
+    #
+    #     expected_type = audit_by_type(filename)
+    #     logging.debug(pprint.pformat('Expected (by type):',))
+    #     logging.debug(pprint.pformat(expected_type))
+    #
+    #
+    # def test_audit_by_frequency():
+    #
+    #     expected_frequency = audit_by_frequency(filename)
+    #     logging.debug(pprint.pformat('Expected (by frequency):',))
+    #     logging.debug(pprint.pformat(expected_frequency))
+
+
+
+
+
+    # def test_audit_unexpected_types(sort_type):
+    #     unexpected_types = audit_by_unexpected(filename, sort_type)
+    #     # pprint.pformat('Unexpected (by frequency):',)
+    #     # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
+    #     logging.debug(pprint.pformat(unexpected_types))
+
+
+    def test_audit(filename, sort_type, filter, language):
+        output = audit(filename, sort_type, filter, language)
+        # pprint.pformat('Unexpected (by frequency):',)
+        # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
+        logging.debug(pprint.pformat(output))
 
     # test_count_tags_by_element()
     # test_count_tags_by_char_content()
@@ -461,15 +471,16 @@ def main():
 
     # EXPERIMENTAL
     # test_audit_by_unexpected_type_single_regex()
-    def test_audit_city_by_type():
-
-        expected_type = audit_cities(filename)
-        logging.debug(pprint.pformat('City (by type):',))
-        logging.debug(pprint.pformat(expected_type))
+    # def test_audit_city_by_type():
+    #
+    #     expected_type = audit_cities(filename)
+    #     logging.debug(pprint.pformat('City (by type):',))
+    #     logging.debug(pprint.pformat(expected_type))
 
     # test_audit_city_by_type()
 
-    test_audit_unexpected_types('type')
-    test_audit_unexpected_types('frequency')
+    # test_audit_unexpected_types('type')
+    # test_audit_unexpected_types('frequency')
+    test_audit(filename, 'type', 'expected', street_type_re_french)
 if __name__ == '__main__':
     main()
