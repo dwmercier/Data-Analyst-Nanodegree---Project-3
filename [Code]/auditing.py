@@ -15,10 +15,9 @@ street_types_set = defaultdict(set)
 
 ### Regex filters
 street_type_re_english = re.compile(r'\S+\.?$', re.IGNORECASE)
-street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE) # this range covers a large swathe of the Latin character set - reduce to French only?
-street_type_re = re.compile(r'(^\S+\.?)|(\S+\.?$)', re.IGNORECASE)
+street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE)
+street_type_re = re.compile(r'(^\S+\.?\s)|(\s\S+\.?$)', re.IGNORECASE)
 
-street_type_re_french = re.compile(r'^\S+\.?', re.IGNORECASE) # this range covers a large swathe of the Latin character set - reduce to French only?
 # street_type_re_french_detect = re.compile(r'[\u00D9-\u00FF]')
 
 # ToDo: expand mappings with special cases?
@@ -155,46 +154,91 @@ def is_street_name(elem):
     return (elem.attrib['k'] == "addr:street")
 
 
-def unexpected_streets_by_type(street_types_set, street_name):
+# def get_street_type(street_name):
+
+# ToDo: decide on best way to look over address and determine street type - use regex matching or stick with the nested ifs below?
+
+def check_unexpected_street_types(sort_type, street_name):
     '''
-    Checks if a street belongs to the expected French or English street
-    types. If the street is in neither the street is added to street_types_set
-    list and its frequency is incremented by 1.
+    Checks if any of the expected street types appear in the street
+    name. If not added to either street_types_set or street)type_list.
+
+    input
+    sort_type = either str'type' or 'frequency'
+
+    output
     '''
-    street_name_english, street_name_french = search_for_streets(street_types_set,
-                                                                 street_name)
 
-    if street_name_english not in expected:
-        if street_name_french not in expected:
-            street_types_set[street_name_english].add(street_name)
+    is_expected = False
 
-    if street_name_french not in expected:
-        if street_name_english not in expected:
-            street_types_set[street_name_french].add(street_name)
+    for e in expected:
+        if e in street_name:
+            is_expected = True
+            break
 
-    return street_types_set
+    if is_expected == False:
+        if sort_type == 'type':
+            street_types_set[street_name].add(street_name)
+
+        elif sort_type == 'frequency':
+            street_types_frequency[street_name] += 1
+
+    # if street_name_english not in expected:
+    #     if street_name_french not in expected:
+    #         if sort_type == 'type':
+    #             sort_type[street_name_english].add(street_name)
+    #
+    #         if sort_type == 'frequency':
+    #             sort_type[street_name_english] += 1
+    #
+    # if street_name_french not in expected:
+    #     if street_name_english not in expected:
+    #         if sort_type == 'type':
+    #             sort_type[street_name_french].add(street_name)
+    #
+    #         if sort_type == 'frequency':
+    #             sort_type[street_name_french] += 1
 
 
-# TODO:  Is regex necessary here? Also normal string comparisons in Python
-# check case - you might need to use write a special check with .lower() or .upper())
-def unexpected_streets_by_frequency(street_types_frequency, street_name):
-    '''
-    Checks if a street belongs to the expected French or English street
-    types. If the street is in neither the street is added to the street_types_frequency
-    list and its frequency is incremented by 1.
-    '''
-    street_name_english, street_name_french = search_for_streets(street_types_frequency,
-                                                                 street_name)
-
-    if street_name_english not in expected:
-        if street_name_french not in expected:
-            street_types_frequency[street_name_english] += 1
-
-    if street_name_french not in expected:
-        if street_name_english not in expected:
-            street_types_frequency[street_name_french] += 1
-
-    return street_types_frequency
+# def unexpected_streets_by_type(street_types, street_name):
+#     '''
+#     Checks if a street belongs to the expected French or English street
+#     types. If the street is in neither the street is added to street_types_set
+#     list and its frequency is incremented by 1.
+#     '''
+#     street_name_english, street_name_french = search_for_streets(street_types_set,
+#                                                                  street_name)
+#
+#     if street_name_english not in expected:
+#         if street_name_french not in expected:
+#             street_types_set[street_name_english].add(street_name)
+#
+#     if street_name_french not in expected:
+#         if street_name_english not in expected:
+#             street_types_set[street_name_french].add(street_name)
+#
+#     return street_types_set
+#
+#
+# # TODO:  Is regex necessary here? Also normal string comparisons in Python
+# def unexpected_streets_by_frequency(street_types_frequency, street_name):
+#     '''
+#     Checks if a street belongs to the expected French or English street
+#     types. If the street is in neither the street is added to the street_types_frequency
+#     list and its frequency is incremented by 1.
+#     '''
+#     street_name_english, street_name_french = search_for_streets(street_types_frequency,
+#                                                                  street_name)
+#
+#     if street_name_english not in expected:
+#         if street_name_french not in expected:
+#             street_types_frequency[street_name_english] += 1
+#
+#     if street_name_french not in expected:
+#         if street_name_english not in expected:
+#             street_types_frequency[street_name_french] += 1
+#
+#     return street_types_frequency
 
 
 def streets_by_type(street_types_set, street_name, street_regex):
@@ -248,38 +292,40 @@ def audit_by_type(filename):
     return street_types_set
 
 
-def audit_by_unexpected_type(filename):
-    '''
+# def audit_by_unexpected_type(filename):
+#     '''
+#
+#     '''
+#     for event, elem in ET.iterparse(filename, events=("start",)):
+#         if elem.tag == "node" or elem.tag == "way":
+#             for tag in elem.iter("tag"):
+#                 if is_street_name(tag):
+#                     unexpected_streets_by_type(street_types_set, tag.attrib['v'])
+#
+#     return street_types_set
+#
+#
+# def audit_by_unexpected_frequency(filename):
+#     '''
+#
+#     '''
+#     for event, elem in ET.iterparse(filename, events=("start",)):
+#         if elem.tag == "node" or elem.tag == "way":
+#             for tag in elem.iter("tag"):
+#                 if is_street_name(tag):
+#                     unexpected_streets_by_frequency(street_types_frequency, tag.attrib['v'])
+#
+#     return street_types_frequency
 
-    '''
+
+def audit_by_unexpected(filename, sort_type):
     for event, elem in ET.iterparse(filename, events=("start",)):
         if elem.tag == "node" or elem.tag == "way":
             for tag in elem.iter("tag"):
                 if is_street_name(tag):
-                    unexpected_streets_by_type(street_types_set, tag.attrib['v'])
+                    check_unexpected_street_types(sort_type, tag.attrib['v'])
 
-    return street_types_set
-
-
-def audit_by_unexpected_frequency(filename):
-    '''
-
-    '''
-    for event, elem in ET.iterparse(filename, events=("start",)):
-        if elem.tag == "node" or elem.tag == "way":
-            for tag in elem.iter("tag"):
-                if is_street_name(tag):
-                    unexpected_streets_by_frequency(street_types_frequency, tag.attrib['v'])
-
-    return street_types_frequency
-
-
-
-
-
-
-
-
+    return street_types_frequency, street_types_set
 
 
 
@@ -303,70 +349,6 @@ def audit_cities(filename):
 
 
     return city_names_type
-
-
-
-
-
-
-
-
-
-
-
-
-
-### Single Regex Stuff
-
-def search_for_streets_single_regex(street_name):
-    for e in expected:
-        if e in street_name:
-
-            break
-        else:
-            print(street_name)
-            # split_street_name = street_name.split()
-
-            # for s in split_street_name:
-            #     if
-
-    # street_pos = street_type_re.search(street_name)
-    # street_pos = street_pos.group()
-
-    # return street_pos
-
-
-def unexpected_streets_by_type_single_regex(street_types_set, street_name):
-    '''
-    Checks if a street belongs to the expected French or English street
-    types. If the street is in neither the street is added to street_types_set
-    list and its frequency is incremented by 1.
-    '''
-    street_type = search_for_streets_single_regex(street_name)
-
-    if street_type not in expected:
-        street_types_set[street_type].add(street_name)
-
-    return street_types_set
-
-def audit_by_unexpected_type_single_regex(filename):
-    '''
-
-    '''
-    for event, elem in ET.iterparse(filename, events=("start",)):
-        if elem.tag == "node" or elem.tag == "way":
-            for tag in elem.iter("tag"):
-                if is_street_name(tag):
-                    unexpected_streets_by_type_single_regex(street_types_set, tag.attrib['v'])
-
-    return street_types_set
-
-
-
-
-
-
-
 
 
 ### Main
@@ -447,6 +429,12 @@ def main():
 
 
 
+    def test_audit_unexpected_types(sort_type):
+        unexpected_types = audit_by_unexpected(filename, sort_type)
+        # pprint.pformat('Unexpected (by frequency):',)
+        # logging.debug(pprint.pformat(list(sort_dict_by_frequency_2(street_types_frequency))))
+        logging.debug(pprint.pformat(unexpected_types))
+
 
     # def test_audit_by_unexpected_type_single_regex():
 
@@ -479,7 +467,9 @@ def main():
         logging.debug(pprint.pformat('City (by type):',))
         logging.debug(pprint.pformat(expected_type))
 
-    test_audit_city_by_type()
+    # test_audit_city_by_type()
 
+    test_audit_unexpected_types('type')
+    test_audit_unexpected_types('frequency')
 if __name__ == '__main__':
     main()
