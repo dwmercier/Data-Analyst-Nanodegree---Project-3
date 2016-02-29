@@ -260,6 +260,7 @@ def process_map(file_in, pretty = False):
                 else:
                     fo.write(json.dumps(el) + "\n")
 
+    return data
 
 
 ### Test functions
@@ -268,38 +269,34 @@ def test_functions():
     # call the process_map procedure with pretty=False. The pretty=True option adds
     # additional spaces to the output, making it significantly larger.
 
-    # ToDo: Fix process_map assertion test
-
     # Test process_map function
-    # data = process_map('ottawa_canada_sample_tiny.osm', True)
-    # print(dat)
-    # correct_first_elem = {
-    #   "name": "Shell",
-    #   "id": "969421551",
-    #   "created": {
-    #     "user": "Johnwhelan",
-    #     "uid": "186592",
-    #     "version": "1",
-    #     "timestamp": "2010-10-30T00:03:00Z",
-    #     "changeset": "6223495"
-    #   },
-    #   "address": {
-    #     "housenumber": "19",
-    #     "city": "Ottawa",
-    #     "street": "O'hara Drive"
-    #   },
-    #   "website": "http://www.shell.ca/",
-    #   "source": "CanVec 6.0 - NRCan",
-    #   "amenity": "fuel",
-    #   "type": "node",
-    #   "pos": [
-    #     45.3839697,
-    #     -75.9596713
-    #   ]
-    # }
-    #
-    # assert data[0] == correct_first_elem
+    data = process_map('ottawa_canada_sample_tiny.osm', True)
+    correct_first_elem = {
+      "name": "Shell",
+      "id": "969421551",
+      "created": {
+        "user": "Johnwhelan",
+        "uid": "186592",
+        "version": "1",
+        "timestamp": "2010-10-30T00:03:00Z",
+        "changeset": "6223495"
+      },
+      "address": {
+        "housenumber": "19",
+        "city": "Ottawa",
+        "street": "O'hara Drive"
+      },
+      "website": "http://www.shell.ca/",
+      "source": "CanVec 6.0 - NRCan",
+      "amenity": "fuel",
+      "type": "node",
+      "pos": [
+        45.3839697,
+        -75.9596713
+      ]
+    }
 
+    assert data[0] == correct_first_elem
 
     # Test check_for_extended_addr function
     assert check_for_extended_addr('addr::') == True
@@ -351,6 +348,7 @@ def test_functions():
 
 def main():
     filename = "ottawa_canada_sample_tiny.osm"
+    # filename = "D:\\[Temp]\\ottawa_canada.osm"
 
     test_functions()
 
