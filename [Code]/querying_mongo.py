@@ -128,16 +128,110 @@ def aggregate(db, pipeline):
 if __name__ == '__main__':
     db = get_db('osm')
 
+    import logging
     import pprint
-    
-    print('Number of documents: ' + str(db.ottawa.find().count()))
-    print('Number of nodes: ' + str(db.ottawa.find({'type' : 'node'}).count()))
-    print('Number of ways: ' + str(db.ottawa.find({'type' : 'way'}).count()))
-    # result = db.ottawa.distinct('created.user')
-    # print(len(db.ottawa.distinct('created.user')))
-    # result = aggregate(db, cuisine_types_pipeline())
-    # result = aggregate(db, data_source_pipeline())
-    # result = aggregate(db, city_by_region_pipeline())
-    result = aggregate(db, top_contributors_pipeline())
-    for r in result:
-        pprint.pprint(r)
+    import os
+
+
+
+    # Line below toggles logging output to external file - uncomment to disable
+    # logging.disable(logging.CRITICAL) # Uncomment to disable logging
+    logging.basicConfig(filemode='w',
+                        filename=os.path.basename(__file__) + ' - output.txt',
+                        level=logging.DEBUG,
+                        format='%(levelname)s - %(message)s'
+                        )
+    def query_db_composition():
+        print('Number of documents: ' + str(db.ottawa.find().count()))
+        print('Number of nodes: ' + str(db.ottawa.find({'type' : 'node'}).count()))
+        print('Number of ways: ' + str(db.ottawa.find({'type' : 'way'}).count()))
+
+        logging.debug(pprint.pformat('Number of documents: ' + str(db.ottawa.find().count())))
+        logging.debug(pprint.pformat('Number of nodes: ' + str(db.ottawa.find({'type' : 'node'}).count())))
+        logging.debug(pprint.pformat('Number of ways: ' + str(db.ottawa.find({'type' : 'way'}).count())))
+
+
+    def query_unique_users():
+        users = str(len(db.ottawa.distinct('created.user')))
+        print('Unique users: '+ users)
+
+        logging.debug(pprint.pformat('Unique users: ' + users))
+
+
+    def query_user_list():
+        result = db.ottawa.distinct('created.user')
+        users = []
+
+        for r in result:
+            users.append(r)
+
+        print('List of unique users: ')
+        pprint.pprint(users)
+
+        # logging.debug(pprint.pformat('Users:'))
+        # logging.debug(pprint.pformat(users, indent=4)) # Unicode error in logging output
+
+
+    def query_top_contributors():
+        result = aggregate(db, top_contributors_pipeline())
+        contributors = []
+
+        for r in result:
+            contributors.append(r)
+
+        print('\n' + 'Contributors: ')
+        pprint.pprint(contributors, indent=4)
+
+        # logging.debug(pprint.pformat('Contributors: '))
+        # logging.debug(pprint.pformat(contributors, indent=4)) # Unicode error in logging output
+
+
+    def query_data_sources():
+        result = aggregate(db, data_source_pipeline())
+        sources = []
+
+        for r in result:
+            sources.append(r)
+
+        print('\n' + 'Data Source: ')
+        pprint.pprint(sources, indent=4)
+
+        # logging.debug(pprint.pformat('Data Source: '))
+        # logging.debug(pprint.pformat(sources, indent=4)) # Unicode error in logging output
+
+
+    def query_city_by_regions():
+        result = aggregate(db, city_by_region_pipeline())
+        regions = []
+
+        for r in result:
+            regions.append(r)
+
+        print('\n' + 'Regions: ')
+        pprint.pprint(regions, indent=4)
+
+        logging.debug(pprint.pformat('Regions: '))
+        logging.debug(pprint.pformat(regions, indent=4))
+
+
+    def query_cuisine_types():
+        result = aggregate(db, cuisine_types_pipeline())
+        cuisines = []
+
+        for r in result:
+            cuisines.append(r)
+
+        print('\n' + 'Cuisine type: ')
+        pprint.pprint(cuisines, indent=4)
+
+        # logging.debug(pprint.pformat('Cuisine type: '))
+        # logging.debug(pprint.pformat(cuisines, indent=4)) # Unicode error in logging output
+
+
+    query_db_composition()
+    query_unique_users()
+    query_user_list()
+    query_top_contributors()
+    query_data_sources()
+    query_city_by_regions()
+    query_cuisine_types()
