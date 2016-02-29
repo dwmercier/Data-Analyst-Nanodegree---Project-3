@@ -13,7 +13,6 @@ import pprint
 
 
 # Globals
-
 street_types_frequency = defaultdict(int)
 street_types_set = defaultdict(set)
 city_names_list = set()
@@ -230,40 +229,43 @@ def main():
     import os
 
     filename = "ottawa_canada_sample.osm" # TODO: Change to relative path before submission
+    # filename = "D:\\[Temp]..\\ottawa_canada_sample_tiny.osm"
+    # filename = "D:\\[Temp]\\ottawa_canada.osm"
 
-    # Line below toggles logging output to external file - comment to enable
+    # Line below toggles logging output to external file - uncomment to disable
     # logging.disable(logging.CRITICAL) # Uncomment to disable logging
     logging.basicConfig(filemode='w',
-                        filename=os.path.basename(__file__) + ' - output.txt',level=logging.DEBUG,
-                        format=' %(asctime)s - %(levelname)s - %(message)s'
+                        filename=os.path.basename(__file__) + ' - output.txt',
+                        level=logging.DEBUG,
+                        format='%(levelname)s - %(message)s'
                         )
 
 
     def run_count_tags_by_element():
         tags = count_tags_by_element(filename)
         print('\n' + 'Tag counts:',)
-        pprint.pprint(tags)
+        pprint.pprint(tags, indent=4)
 
         logging.debug(pprint.pformat('Tag Counts:',))
-        logging.debug(pprint.pformat(tags))
+        logging.debug(pprint.pformat(tags, indent=4))
 
 
     def run_count_tags_by_char_content():
         keys = count_tags_by_char_content(filename)
         print('\n' + 'Tag type counts:',)
-        pprint.pprint(keys)
+        pprint.pprint(keys, indent=4)
 
         logging.debug(pprint.pformat('Tag type Counts:',))
-        logging.debug(pprint.pformat(keys))
+        logging.debug(pprint.pformat(keys, indent=4))
 
 
     def run_list_users():
         users = list_users(filename)
         print('\n' + 'Unique users:',)
-        pprint.pprint(users)
+        pprint.pprint(users, indent=4)
 
         logging.debug(pprint.pformat('Users:',))
-        logging.debug(pprint.pformat(users))
+        logging.debug(pprint.pformat(users, indent=4))
 
 
     def run_audit(filename, sort_type, filter, language):
@@ -272,16 +274,17 @@ def main():
         print("Filtering by: " + filter)
         print("Regex language is: " + str(language)+ '\n')
         output = audit(filename, sort_type, filter, language)
-        pprint.pprint(output)
+        pprint.pprint(output, indent=4)
 
-        logging.debug(pprint.pformat(output))
-        logging.debug(pprint.pformat('\n' + "Running audit on " + filename))
+        logging.debug(pprint.pformat("Running audit on " + filename))
         logging.debug(pprint.pformat("Sorting by: " + sort_type))
         logging.debug(pprint.pformat("Filtering by: " + filter))
-        logging.debug(pprint.pformat("Regex language is: " + str(language)+ '\n'))
+        logging.debug(pprint.pformat("Regex language is: " + str(language)))
+        logging.debug(pprint.pformat(output, indent=4))
 
-    run_audit(filename, 'type', 'unexpected', 'English')
-    run_audit(filename, 'type', 'expected', 'French')
+    run_audit(filename, 'frequency', 'expected', 'English')
+    run_audit(filename, 'frequency', 'expected', 'French')
+    run_audit(filename, 'frequency', 'unexpected', 'French')
     run_count_tags_by_element()
     run_count_tags_by_char_content()
     run_list_users()
