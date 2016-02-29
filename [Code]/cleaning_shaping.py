@@ -11,65 +11,47 @@ import pprint
 import codecs
 import json
 
-# TODO: How to separate English street names that happen to be in expected_french (e.g Concession Road)?
 
-# Unsure: Heights, Landing, Green, Loop, Grove, Pathway, Rand, Path, Bay, Row, Shore, Promenade(English), Allée, Square, Canyon
-# All
-# Edge Cases: 10e Avenue Ouest, {'Regional Road 174'}, Highway 15, {'prom. des Aubépine Dr.'}, 'County Road 11', Old Highway 17'
+### Regex matching patterns
 
-# English regex matching patterns
-
-# ToDo: add regex patterns for less common street types found in audit
 type_regexes = [
     [re.compile(r'\sSt.\s|\sSt\.?$', re.IGNORECASE), 'Street'],
-    [re.compile(r'\s?Blvd\.?\s|\sBlvd\.?$', re.IGNORECASE), 'Boulevard'],
-    [re.compile(r'\s?Ave\.?\s|\sAve\.?$', re.IGNORECASE), 'Avenue'],
     [re.compile(r'\s?Rd\.?\s|\sRd\.?$', re.IGNORECASE), 'Road'],
     [re.compile(r'\s?Dr\.?\s|\sDr\.?$', re.IGNORECASE), 'Drive'],
-    [re.compile(r'\s?Ln\.?\s|\sLn\.?$', re.IGNORECASE), 'Lane'],
-    [re.compile(r'\s?Pkwy\.?\s|\sPkwy\.?$', re.IGNORECASE), 'Parkway']
+    [re.compile(r'\s?Ave\.?\s|\sAve\.?$', re.IGNORECASE), 'Avenue'],
+    [re.compile(r'\s?Cr\.?\s|\sCr\.?$', re.IGNORECASE), 'Crescent'],
+    [re.compile(r'\s?Wy\.?\s|\sWy\.?$', re.IGNORECASE), 'Way'],
+]
+
+type_regexes_french = [
+    [re.compile(r'\sR.\s|\sR\.?$', re.IGNORECASE), 'Rue'],
+    [re.compile(r'\s?Ch\.?\s|\sCh\.?$', re.IGNORECASE), 'Chemin'],
+    [re.compile(r'\s?Blvd\.?\s|\Blvd\.?$', re.IGNORECASE), 'Boulevard'],
+    [re.compile(r'\s?Ave\.?\s|\sAve\.?$', re.IGNORECASE), 'Avenue'],
+    [re.compile(r'\sImp.\s|\sImp\.?$', re.IGNORECASE), 'Impasse'],
+    [re.compile(r'\s?Conc\.?\s|\sConc\.?$', re.IGNORECASE), 'Concession'],
 ]
 
 cardinal_regexes = [
-    [re.compile(r'\s?(?<!\S)S\.?\s|\s(?<!\S)S\.?$', re.IGNORECASE), 'South'],
     [re.compile(r'\s?(?<!\S)N\.?\s|\s(?<!\S)N\.?$', re.IGNORECASE), 'North'],
     [re.compile(r'\s?(?<!\S)W\.?\s|\s(?<!\S)W\.?$', re.IGNORECASE), 'West'],
-    [re.compile(r'\s?(?<!\S)E\.?\s|\s(?<!\S)E\.?$', re.IGNORECASE), 'East']
+    [re.compile(r'\s?(?<!\S)E\.?\s|\s(?<!\S)E\.?$', re.IGNORECASE), 'East'],
+    [re.compile(r'\s?(?<!\S)S\.?\s|\s(?<!\S)S\.?$', re.IGNORECASE), 'South']
 ]
 
 move_cardinal_regexes = {
-    'East' : re.compile(r'(East[^\w]|East$)', re.IGNORECASE),
+    'North' : re.compile(r'(North[^\w]|North$)', re.IGNORECASE),
     'West' : re.compile(r'(West[^\w]|West$)', re.IGNORECASE),
-    'South' : re.compile(r'(South$[^\w]|South$)', re.IGNORECASE),
-    'North' : re.compile(r'(North[^\w]|North$)', re.IGNORECASE)
+    'East' : re.compile(r'(East[^\w]|East$)', re.IGNORECASE),
+    'South' : re.compile(r'(South$[^\w]|South$)', re.IGNORECASE)
 }
 
 city_regexes = [
     [re.compile(r'.*of\s|.*Of\s'), '']
 ]
-# ToDo: Convert French street type regexes into list and dict format
-# French regex matching patterns
-ave_pattern_french = re.compile(r'\s?Rue\.?\s|\sRue\.?$|') # Avenue
-blvd_pattern_french = re.compile(r'\s?Blvd\.?\s|\sBlvd\.?$') # Boulevard
-st_pattern_french = re.compile(r'\s?St\.?\s|\sSt\.?$') # Rue
-rd_pattern_french = re.compile(r'\s?Rd\.?\s|\sRd\.?$') #
-dr_pattern_french = re.compile(r'\s?Dr\.?\s|\sDr\.?$')
-ln_pattern_french = re.compile(r'\s?Ln\.?\s|\sLn\.?$')
-mt_pattern_french = re.compile(r'\s?Mt\.?\s|\sMt\.?$')
-pkwy_pattern_french = re.compile(r'\s?Pkwy\.?\s|\sPkwy\.?$')
-s_pattern_french = re.compile(r'\s?(?<!\S)S\.?\s|\s(?<!\S)S\.?$')
-n_pattern_french = re.compile(r'\s?(?<!\S)N\.?\s|\s(?<!\S)N\.?$')
-w_pattern_french = re.compile(r'\s?(?<!\S)O\.?\s|\s(?<!\S)O\.?$')
-e_pattern_french = re.compile(r'\s?(?<!\S)E\.?\s|\s(?<!\S)E\.?$')
-east_pattern_french = re.compile(r'(Est[^\w]|Est$)')
-west_pattern_french = re.compile(r'(Ouest[^\w]|Ouest$)')
-south_pattern_french = re.compile(r'(Sud[^\w]|Sud$)')
-north_pattern_french = re.compile(r'(Nord[^\w]|Nord$)')
 
-# General regex matching patterns
-lower = re.compile(r'^([a-z]|_)*$')
-lower_colon = re.compile(r'^([a-z]|_)*:([a-z]|_)*$')
 problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
+
 
 
 ### Main functions
@@ -350,8 +332,8 @@ def test_functions():
     assert update_street_type('South Ash Rd.') == 'South Ash Road'
     assert update_street_type('South Ash Dr.') == 'South Ash Drive'
     assert update_street_type('South Ash Ave.') == 'South Ash Avenue'
-    assert update_street_type('South Ash Ln') == 'South Ash Lane'
-    assert update_street_type('South Ash Pkwy') == 'South Ash Parkway'
+    assert update_street_type('South Ash Cr.') == 'South Ash Crescent'
+    assert update_street_type('South Ash Wy') == 'South Ash Way'
 
     # Test capitalize_tag function
     assert capitalize_tag('baker Street') == 'Baker Street'
@@ -364,15 +346,15 @@ def test_functions():
     # Test clean_tag function
     assert clean_tag('addr:street', 'Chanonhouse st.') == 'Chanonhouse Street'
     assert clean_tag('addr:street', 'St. Jerome St') == 'St. Jerome Street'
-    assert clean_tag('addr:street', 'South Ash Ln ') == 'South Ash Lane'
+    assert clean_tag('addr:street', 'South Ash Cr ') == 'South Ash Crescent'
     assert clean_tag('addr:street', 'Baker   Street south') == 'South Baker Street'
 
 def main():
     filename = "ottawa_canada_sample_tiny.osm"
 
-    # test_functions()
+    test_functions()
 
-    process_map(filename, True)
+    # process_map(filename, True)
 
 
 if __name__ == '__main__':
