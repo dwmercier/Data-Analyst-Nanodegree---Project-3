@@ -85,21 +85,21 @@ def top_contributors_pipeline():
     return pipeline
 
 
-def one_time_users_pipeline():
+def single_entry_users_pipeline():
     pipeline = [
         {'$group':
             {
                 '_id' : '$created.user',
-                'count' : {'$sum':1}
+                'count' : {'$sum': 1}
             }
         },
         {'$group':
              {
                  '_id' : '$count',
-                 'num_users' : {'$sum':1}
+                 'users' : {'$sum': 1}
              }
         },
-        {'$sort' : { '_id' : 1}},
+        {'$sort' : {'_id' : 1}},
         {'$limit': 1 }
     ]
 
@@ -153,9 +153,9 @@ if __name__ == '__main__':
 
     def query_unique_users():
         users = str(len(db.ottawa.distinct('created.user')))
-        print('Unique users: '+ users)
+        print('Number of unique users: '+ users)
 
-        logging.debug(pprint.pformat('Unique users: ' + users))
+        logging.debug(pprint.pformat('Number of unique users: ' + users))
 
 
     def query_user_list():
@@ -170,6 +170,19 @@ if __name__ == '__main__':
 
         # logging.debug(pprint.pformat('Users:'))
         # logging.debug(pprint.pformat(users, indent=4)) # Unicode error in logging output
+
+    def query_single_entry_users():
+        result = aggregate(db, single_entry_users_pipeline())
+        users = []
+
+        for r in result:
+            users.append(r)
+
+        print('Number of users with a single entry: ')
+        pprint.pprint(users, indent=4)
+
+        logging.debug(pprint.pformat('Number of users with a single entry:: '))
+        logging.debug(pprint.pformat(users, indent=4))
 
 
     def query_top_contributors():
@@ -231,6 +244,7 @@ if __name__ == '__main__':
     query_db_composition()
     query_unique_users()
     query_user_list()
+    query_single_entry_users()
     query_top_contributors()
     query_data_sources()
     query_city_by_regions()
