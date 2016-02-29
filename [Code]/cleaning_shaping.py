@@ -244,7 +244,9 @@ def process_map(file_in, pretty = False):
     '''
     Runs the shape_element and clean functions, then writes json file
     '''
-    file_out = "{0}.json".format(file_in)
+    output_dir = "..\\[Output]\\ottawa_canada_sample.osm"
+    file_out = "{0}.json".format(output_dir)
+
     data = []
 
     with codecs.open(file_out, "w") as fo:
@@ -346,13 +348,17 @@ def test_functions():
     assert clean_tag('addr:street', 'South Ash Cr ') == 'South Ash Crescent'
     assert clean_tag('addr:street', 'Baker   Street south') == 'South Baker Street'
 
+
+
 def main():
-    filename = "ottawa_canada_sample_tiny.osm"
-    # filename = "D:\\[Temp]\\ottawa_canada.osm"
 
-    test_functions()
+    import os
 
-    # process_map(filename, True)
+    filename = "..\\[Data]\\ottawa_canada_sample.osm"
+
+    # test_functions()
+
+    process_map(filename, True)
 
 
 if __name__ == '__main__':

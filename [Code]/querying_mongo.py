@@ -137,7 +137,7 @@ if __name__ == '__main__':
     # Line below toggles logging output to external file - uncomment to disable
     # logging.disable(logging.CRITICAL) # Uncomment to disable logging
     logging.basicConfig(filemode='w',
-                        filename=os.path.basename(__file__) + ' - output.txt',
+                        filename='..\\[Output]\\' + os.path.basename(__file__) + ' - output.txt',
                         level=logging.DEBUG,
                         format='%(levelname)s - %(message)s'
                         )
