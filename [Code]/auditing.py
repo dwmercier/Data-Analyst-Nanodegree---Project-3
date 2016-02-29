@@ -11,12 +11,12 @@ import re
 import pprint
 
 
+
 # Globals
 
 street_types_frequency = defaultdict(int)
 street_types_set = defaultdict(set)
 city_names_list = set()
-
 
 # Regular expressions for categorizing tag content format
 lower = re.compile(r'^([a-z]|_)*$')
@@ -41,6 +41,7 @@ expected_french = ['Rue', 'Chemin', 'Boulevard', 'Avenue', 'Impasse', 'Concessio
                    'Croissant', 'Principale', 'Parkway', 'Terrace', 'Concourse','Allée']
 
 expected = expected_english + expected_french
+
 
 
 ### Helper functions
@@ -81,6 +82,7 @@ def filter_key_types(element, keys):
             keys['other'] +=1
 
     return keys
+
 
 
 ### Main functions
@@ -124,7 +126,6 @@ def list_users(filename, uids=[]):
     '''
     Returns a set of unique user IDs ("uid")
     '''
-    users = set()
 
     for _, element in ET.iterparse(filename):
         if element.get('uid'):
@@ -221,15 +222,16 @@ def audit(filename, sort_type, filter, language):
 
     return results
 
-### Main
+
+
 def main():
 
     import logging
     import os
 
     filename = "ottawa_canada_sample.osm" # TODO: Change to relative path before submission
-    language = 'English'
 
+    # Line below toggles logging output to external file - comment to enable
     # logging.disable(logging.CRITICAL) # Uncomment to disable logging
     logging.basicConfig(filemode='w',
                         filename=os.path.basename(__file__) + ' - output.txt',level=logging.DEBUG,
@@ -237,25 +239,34 @@ def main():
                         )
 
 
-    def test_count_tags_by_element():
+    def run_count_tags_by_element():
         tags = count_tags_by_element(filename)
+        print('\n' + 'Tag counts:',)
+        pprint.pprint(tags)
+
         logging.debug(pprint.pformat('Tag Counts:',))
         logging.debug(pprint.pformat(tags))
 
 
-    def test_count_tags_by_char_content():
+    def run_count_tags_by_char_content():
         keys = count_tags_by_char_content(filename)
+        print('\n' + 'Tag type counts:',)
+        pprint.pprint(keys)
+
         logging.debug(pprint.pformat('Tag type Counts:',))
         logging.debug(pprint.pformat(keys))
 
 
-    def test_list_users():
+    def run_list_users():
         users = list_users(filename)
+        print('\n' + 'Unique users:',)
+        pprint.pprint(users)
+
         logging.debug(pprint.pformat('Users:',))
         logging.debug(pprint.pformat(users))
 
 
-    def test_audit(filename, sort_type, filter, language):
+    def run_audit(filename, sort_type, filter, language):
         print('\n' + "Running audit on " + filename)
         print("Sorting by: " + sort_type)
         print("Filtering by: " + filter)
@@ -263,12 +274,19 @@ def main():
         output = audit(filename, sort_type, filter, language)
         pprint.pprint(output)
 
-    # test_count_tags_by_element()
-    # test_count_tags_by_char_content()
-    # test_list_users()
+        logging.debug(pprint.pformat(output))
+        logging.debug(pprint.pformat('\n' + "Running audit on " + filename))
+        logging.debug(pprint.pformat("Sorting by: " + sort_type))
+        logging.debug(pprint.pformat("Filtering by: " + filter))
+        logging.debug(pprint.pformat("Regex language is: " + str(language)+ '\n'))
 
-    test_audit(filename, 'type', 'unexpected', 'English')
-    test_audit(filename, 'type', 'expected', 'French')
+    run_audit(filename, 'type', 'unexpected', 'English')
+    run_audit(filename, 'type', 'expected', 'French')
+    run_count_tags_by_element()
+    run_count_tags_by_char_content()
+    run_list_users()
+
+
 
 if __name__ == '__main__':
     main()
