@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<osm>
+	<node changeset="6223495" id="969421551" lat="45.3839697" lon="-75.9596713" timestamp="2010-10-30T00:03:00Z" uid="186592" user="Johnwhelan" version="1">
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:city" v="City of Ottawa" />
+		<tag k="addr:street" v="O'hara Drive" />
+		<tag k="addr:housenumber" v="19" />		
+		<tag k="name" v="Shell" />
+		<tag k="amenity" v="fuel" />
+		<tag k="website" v="http://www.shell.ca/" />
+	</node>
+	<way changeset="7442206" id="102496590" timestamp="2011-03-03T00:04:33Z" uid="186592" user="Johnwhelan" version="1">
+		<nd ref="1183680859" />
+		<nd ref="1183688072" />
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:interpolation" v="odd" />
+	</way>
+	<node changeset="5313273" id="832989465" lat="45.2150013" lon="-75.8093094" timestamp="2010-07-25T16:16:56Z" uid="186592" user="Johnwhelan" version="1" />
+	<node changeset="5313273" id="832989778" lat="45.1930714" lon="-75.8251882" timestamp="2010-07-25T16:17:03Z" uid="186592" user="Johnwhelan" version="1">
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:city" v="City of  Ottawa" />
+		<tag k="addr:street" v="Chanonhouse St." />
+		<tag k="addr:housenumber" v="24" />
+	</node>
+	<node changeset="5313305" id="832992242" lat="45.0755561" lon="-75.6178742" timestamp="2010-07-25T16:17:47Z" uid="186592" user="Johnwhelan" version="1">
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:city" v="Municipality of  North Grenville" />
+		<tag k="addr:street" v="South Ash Lane" />
+		<tag k="addr:housenumber" v="982" />
+	</node>
+	<node changeset="5313305" id="832992727" lat="45.0930176" lon="-75.5512039" timestamp="2010-07-25T16:17:56Z" uid="186592" user="Johnwhelan" version="1" />
+	<node changeset="5313305" id="832993168" lat="45.0634409" lon="-75.5202234" timestamp="2010-07-25T16:18:03Z" uid="186592" user="Johnwhelan" version="1" />
+	<node changeset="5313287" id="832993430" lat="45.1394679" lon="-75.6160364" timestamp="2010-07-25T16:18:09Z" uid="186592" user="Johnwhelan" version="1" />
+	<node changeset="5313305" id="832993720" lat="45.0680412" lon="-75.5375403" timestamp="2010-07-25T16:18:15Z" uid="186592" user="Johnwhelan" version="1">
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:city" v="Township of North Dundas" />
+		<tag k="addr:street" v="Loughlin Ridge  Rd. South" />
+		<tag k="addr:housenumber" v="10397" />
+	</node>
+	<node changeset="5313305" id="832994013" lat="45.1047014" lon="-75.6212114" timestamp="2010-07-25T16:18:21Z" uid="186592" user="Johnwhelan" version="1" />
+	<node changeset="5313273" id="832994359" lat="45.1933039" lon="-75.8708184" timestamp="2010-07-25T16:18:29Z" uid="186592" user="Johnwhelan" version="1" />
+	<node changeset="5313305" id="832994669" lat="45.1023358" lon="-75.6156195" timestamp="2010-07-25T16:18:35Z" uid="186592" user="Johnwhelan" version="1">
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:city" v="Municipality of North Grenville" />
+		<tag k="addr:street" v="Mapleshore St." />
+		<tag k="addr:housenumber" v="3767" />
+	</node>
+	<way changeset="7442206" id="102496524" timestamp="2011-03-03T00:04:21Z" uid="186592" user="Johnwhelan" version="1">
+		<nd ref="1183653814" />
+		<nd ref="1183675574" />
+		<nd ref="1183673484" />
+		<nd ref="1183696862" />
+		<nd ref="1183707378" />
+		<nd ref="1183679979" />
+		<nd ref="1183672232" />
+		<nd ref="1183653091" />
+		<nd ref="1183710109" />
+		<nd ref="1183681497" />
+		<nd ref="1183642754" />
+		<nd ref="1183691523" />
+		<nd ref="1183638630" />
+		<nd ref="1183676141" />
+		<nd ref="1183709738" />
+		<nd ref="1183706727" />
+		<nd ref="1183710793" />
+		<tag k="source" v="CanVec 6.0 - NRCan" />
+		<tag k="addr:interpolation" v="even" />
+	</way>
+</osm>
