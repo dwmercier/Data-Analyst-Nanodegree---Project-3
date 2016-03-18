@@ -1,0 +1,12 @@
+Links
+=====
+Link to metro extract (search for city)
+https://mapzen.com/data/metro-extracts --> ottawa, canada
+
+Link to dataset:
+https://s3.amazonaws.com/metro-extracts.mapzen.com/ottawa_canada.osm.bz2
+
+
+Reason for selection
+====================
+Being a long-term resident, I selected the Ottawa-Gatineau region to look at a city I fell I know from a new perspective. The bilingual nature of the dataset also offered a unique data wrangling challenge. 

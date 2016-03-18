@@ -1,0 +1,22 @@
+Websites
+========
+
+Unicode in Python
+	https://docs.python.org/3/howto/unicode.html
+
+Open Street Map Wiki for Ottawa:
+	http://wiki.openstreetmap.org/wiki/Canada:Ontario:Ottawa
+
+For learning regular expressions:
+	http://regexone.com/
+
+Sorting dicts in Python
+	http://stackoverflow.com/questions/613183/sort-a-python-dictionary-by-value	
+
+The ElementTree XML API
+	https://docs.python.org/3/library/xml.etree.elementtree.html#parsing-xml	
+
+Books
+=====
+Automate the Boring Stuff with Python
+Python Pocket Reference 4th Ed.
