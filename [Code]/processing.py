@@ -1,16 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-# TODO: add file description
-'''
 
-'''
-import xml.etree.cElementTree as ET
-from collections import defaultdict
-import re
-import pprint
 import codecs
 import json
-
+import re
+import xml.etree.cElementTree as ET
 
 ### Regex matching patterns
 
@@ -40,10 +34,10 @@ cardinal_regexes = [
 ]
 
 move_cardinal_regexes = {
-    'North' : re.compile(r'(North[^\w]|North$)', re.IGNORECASE),
-    'West' : re.compile(r'(West[^\w]|West$)', re.IGNORECASE),
-    'East' : re.compile(r'(East[^\w]|East$)', re.IGNORECASE),
-    'South' : re.compile(r'(South$[^\w]|South$)', re.IGNORECASE)
+    'North': re.compile(r'(North[^\w]|North$)', re.IGNORECASE),
+    'West': re.compile(r'(West[^\w]|West$)', re.IGNORECASE),
+    'East': re.compile(r'(East[^\w]|East$)', re.IGNORECASE),
+    'South': re.compile(r'(South$[^\w]|South$)', re.IGNORECASE)
 }
 
 city_regexes = [
@@ -53,26 +47,38 @@ city_regexes = [
 problemchars = re.compile(r'[=\+/&<>;\'"\?%#$@\,\. \t\r\n]')
 
 
-
 ### Main functions
 
 def shape_element(element):
+    """Cleans the contents of an individual element from the OSM file.
+
+    Iterates over the children of the element, cleaning any that match the regex
+    patterns of the cleaning functions that shape_element calls. Each child is 
+    added to a dict that represents the contents of the original element in a 
+    JSON-compatible format.
+
+    Args:
+        element: An elementTree Element object
+
+    Returns:
+        A dict containing a cleaned version of the element in JSON-compatible 
+        format.
+        
+    """
     top_level_tags = ['id', 'type', 'visible', 'created', 'address']
-    created = [ "version", "changeset", "timestamp", "user", "uid"]
+    created = ["version", "changeset", "timestamp", "user", "uid"]
     pos = ['lat', 'lon']
     node = {}
-    pos_state = node.get('pos')
     node['created'] = dict()
 
-
-    if element.tag == "node" or element.tag == "way" :
+    if element.tag == "node" or element.tag == "way":
         node['type'] = element.tag
         attributes = element.attrib
 
-        for a in attributes:  # this refers to the top level elements of the node or way
+        for a in attributes:
             if a in pos:
                 if node.get('pos') == None:
-                    node['pos'] = [0,0]
+                    node['pos'] = [0, 0]
 
                 if node.get('pos'):
                     if a == 'lat':
@@ -90,22 +96,20 @@ def shape_element(element):
             else:
                 node[a] = attributes[a]
 
-
         for child in element:
-            # ToDo: Model if and elif statements after for a in attributes workflow?
             if child.tag == 'tag':
                 tag = child.attrib
                 tag_key = tag['k']
                 tag_value = tag['v']
 
                 if problemchars.search(tag_key):
-
                     continue
 
                 if node.get('address') == None and 'addr:' in tag_key:
                     node['address'] = {}
 
-                if 'addr:' in tag_key and check_for_extended_addr(tag_key) == False:
+                if 'addr:' in tag_key and check_for_extended_addr(
+                        tag_key) == False:
                     cleaned_tag = clean_tag(tag_key, tag_value)
                     node['address'][tag_key[5:]] = cleaned_tag
 
@@ -113,12 +117,6 @@ def shape_element(element):
                     node[tag_key] = tag_value
 
             elif child.tag == 'nd':
-                '''
-                Check if any node_refs entries exist in the node dictionary. If not
-                create node_refs entry and add the value of nd to it. Otherwise just append
-                the value of nd.
-                '''
-
                 if node.get('node_refs') == None:
                     node['node_refs'] = []
 
@@ -130,15 +128,17 @@ def shape_element(element):
         return None
 
 
-
 ### Helper Functinos
-# ToDo: the hierarchy of function execution in the cleaning process needs to be sorted out
 
 def check_for_extended_addr(tag_key):
-    '''
-    Check if the addr value in tag_key has more than one colon.
-    '''
+    """Checks if tag_key has more than one colon.
 
+    Args:
+        tag_key: A string specifying the type of value contained in tag_value.
+
+    Returns:
+        An integer specifying the number of times a colon was found in tag_key.
+    """
     return len(re.findall(r':', tag_key)) > 1
 
 
@@ -183,7 +183,6 @@ def update_cardinal_direction(tag_value):
 
             return tag_value
 
-    # else:
     return tag_value
 
 
@@ -200,8 +199,6 @@ def update_street_type(tag_value):
         match = r[0].search(tag_value)
 
         if match:
-            # ToDo: see if it's worthile to switch all .replace statements with .sub statements
-            # address_name = address_name.replace(str(m.group()), ' ' + r[1])
             tag_value = re.sub(regex, ' ' + replacement, tag_value)
 
             return tag_value
@@ -240,10 +237,22 @@ def clean_tag(tag_key, tag_value):
     return tag_value
 
 
-def process_map(file_in, pretty = False):
-    '''
-    Runs the shape_element and clean functions, then writes json file
-    '''
+def process_map(file_in, pretty=False):
+    """Iteratively cleans an OSM file and outputs the results to a JSON file.
+
+    Iterates over the contents of the OSM file using ElementTree, passing each
+    element to the shape_element function for cleaning. Adds each element to
+    both the JSON file and a list.
+
+    Args:
+        file_in: A string containing the pathname of an OSM file.
+        pretty: A boolean specifying whether the output should be formatted
+        for better readability.
+
+    Returns:
+        In addition to the JSON output, returns a list containing the elements
+        of the OSM file in JSON-compatible format for testing if needed.
+    """
     output_dir = "..\\[Output]\\ottawa_canada_sample.osm"
     file_out = "{0}.json".format(output_dir)
 
@@ -257,7 +266,7 @@ def process_map(file_in, pretty = False):
                 data.append(el)
 
                 if pretty:
-                    fo.write(json.dumps(el, indent=2)+"\n")
+                    fo.write(json.dumps(el, indent=2) + "\n")
 
                 else:
                     fo.write(json.dumps(el) + "\n")
@@ -267,35 +276,31 @@ def process_map(file_in, pretty = False):
 
 ### Test functions
 def test_functions():
-    # NOTE: if you are running this code on your computer, with a larger dataset,
-    # call the process_map procedure with pretty=False. The pretty=True option adds
-    # additional spaces to the output, making it significantly larger.
-
     # Test process_map function
-    data = process_map('ottawa_canada_sample_tiny.osm', True)
+    data = process_map('..\\[Data]\\ottawa_canada_sample_tiny.osm', True)
     correct_first_elem = {
-      "name": "Shell",
-      "id": "969421551",
-      "created": {
-        "user": "Johnwhelan",
-        "uid": "186592",
-        "version": "1",
-        "timestamp": "2010-10-30T00:03:00Z",
-        "changeset": "6223495"
-      },
-      "address": {
-        "housenumber": "19",
-        "city": "Ottawa",
-        "street": "O'hara Drive"
-      },
-      "website": "http://www.shell.ca/",
-      "source": "CanVec 6.0 - NRCan",
-      "amenity": "fuel",
-      "type": "node",
-      "pos": [
-        45.3839697,
-        -75.9596713
-      ]
+        "name": "Shell",
+        "id": "969421551",
+        "created": {
+            "user": "Johnwhelan",
+            "uid": "186592",
+            "version": "1",
+            "timestamp": "2010-10-30T00:03:00Z",
+            "changeset": "6223495"
+        },
+        "address": {
+            "housenumber": "19",
+            "city": "Ottawa",
+            "street": "O'hara Drive"
+        },
+        "website": "http://www.shell.ca/",
+        "source": "CanVec 6.0 - NRCan",
+        "amenity": "fuel",
+        "type": "node",
+        "pos": [
+            45.3839697,
+            -75.9596713
+        ]
     }
 
     assert data[0] == correct_first_elem
@@ -315,10 +320,14 @@ def test_functions():
     assert update_cardinal_direction('Baker Street W') == 'West Baker Street'
 
     # Test move_cardinal_direction function
-    assert move_cardinal_direction('Baker Street South', 'South') == 'South Baker Street'
-    assert move_cardinal_direction('Baker Street East', 'East') == 'East Baker Street'
-    assert move_cardinal_direction('Baker Street North', 'North') == 'North Baker Street'
-    assert move_cardinal_direction('Baker Street West', 'West') == 'West Baker Street'
+    assert move_cardinal_direction('Baker Street South',
+                                   'South') == 'South Baker Street'
+    assert move_cardinal_direction('Baker Street East',
+                                   'East') == 'East Baker Street'
+    assert move_cardinal_direction('Baker Street North',
+                                   'North') == 'North Baker Street'
+    assert move_cardinal_direction('Baker Street West',
+                                   'West') == 'West Baker Street'
 
     # Test remove_whitespace function
     assert remove_whitespace('Baker  Street') == 'Baker Street'
@@ -346,17 +355,14 @@ def test_functions():
     assert clean_tag('addr:street', 'Chanonhouse st.') == 'Chanonhouse Street'
     assert clean_tag('addr:street', 'St. Jerome St') == 'St. Jerome Street'
     assert clean_tag('addr:street', 'South Ash Cr ') == 'South Ash Crescent'
-    assert clean_tag('addr:street', 'Baker   Street south') == 'South Baker Street'
-
+    assert clean_tag('addr:street',
+                     'Baker   Street south') == 'South Baker Street'
 
 
 def main():
+    filename = '..\\[Data]\\ottawa_canada_sample.osm'
 
-    import os
-
-    filename = "..\\[Data]\\ottawa_canada_sample.osm"
-
-    # test_functions()
+    test_functions()
 
     process_map(filename, True)
 
