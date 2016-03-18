@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-'''
+"""
 Command to import cleaned osm json file:
   mongoimport --db osm --collection ottawa --file ottawa_canada.osm.json
-'''
+"""
 
 
 
 ### MongoDB Pipelines
 
 def city_by_region_pipeline():
-    '''
-    View entries by the city region
-    '''
+    """
+    Sort city region by frequency.
+    """
     pipeline = [
 
         {'$group' :
@@ -29,15 +29,15 @@ def city_by_region_pipeline():
 
 
 def data_source_pipeline():
-    '''
-    View entries by data source used
-    '''
+    """
+    Sort data source used by frequency.
+    """
     pipeline = [
 
         {'$group' :
             {
-                '_id' : '$source',
-                'count' :  {'$sum' : 1}
+            '_id' : '$source',
+            'count' :  {'$sum' : 1}
             }
         },
         {'$match' : {'_id' : {'$ne' : None}}},
@@ -48,15 +48,15 @@ def data_source_pipeline():
 
 
 def cuisine_types_pipeline():
-    '''
-    Sort cuisine by type
-    '''
+    """
+    Sort cuisine types by frequency.
+    """
     pipeline = [
 
         {'$group' :
             {
-                '_id' : '$cuisine',
-                'count' :  {'$sum' : 1}
+            '_id' : '$cuisine',
+            'count' :  {'$sum' : 1}
             }
         },
 
@@ -67,15 +67,15 @@ def cuisine_types_pipeline():
 
 
 def top_contributors_pipeline():
-    '''
-    Sort users by their number of contributions
-    '''
+    """
+    Sort users by their total number of contributions.
+    """
     pipeline = [
 
         {'$group' :
             {
-                '_id' : '$created.user',
-                'count' :  {'$sum' : 1}
+            '_id' : '$created.user',
+            'count' :  {'$sum' : 1}
             }
         },
 
@@ -86,17 +86,21 @@ def top_contributors_pipeline():
 
 
 def single_entry_users_pipeline():
+    """
+    Show all users with a single contribution
+    """
     pipeline = [
+
         {'$group':
             {
-                '_id' : '$created.user',
-                'count' : {'$sum': 1}
+            '_id' : '$created.user',
+            'count' : {'$sum': 1}
             }
         },
         {'$group':
              {
-                 '_id' : '$count',
-                 'users' : {'$sum': 1}
+             '_id' : '$count',
+             'users' : {'$sum': 1}
              }
         },
         {'$sort' : {'_id' : 1}},
@@ -110,6 +114,14 @@ def single_entry_users_pipeline():
 ### Database operations
 
 def get_db(db_name):
+    """Generates a Database object pointing to the provided MongoDB database
+
+    Args:
+        db_name: A string with a MongoDB database name.
+
+    Returns:
+        A MongoDB Database object for accessing db_name in a local MongoDB client.
+    """
     from pymongo import MongoClient
     client = MongoClient('localhost:27017')
     db = client[db_name]
@@ -117,6 +129,15 @@ def get_db(db_name):
 
 
 def aggregate(db, pipeline):
+    """Generates a Database object pointing to the provided MongoDB database
+
+    Args:
+        db: A MongoDB Database object containing the MongoDB client and database.
+        pipeline: A list containing a formatted MongoDB query.
+
+    Returns:
+        A MongoDB CommandCursor object containing the results of the query
+    """
     result = db.ottawa.aggregate(pipeline)
 
     return result
@@ -125,13 +146,12 @@ def aggregate(db, pipeline):
 
 ### Main
 
-if __name__ == '__main__':
+def main():
     db = get_db('osm')
 
     import logging
     import pprint
     import os
-
 
 
     # Line below toggles logging output to external file - uncomment to disable
@@ -249,3 +269,7 @@ if __name__ == '__main__':
     query_data_sources()
     query_city_by_regions()
     query_cuisine_types()
+
+if __name__ == '__main__':
+
+    main()
