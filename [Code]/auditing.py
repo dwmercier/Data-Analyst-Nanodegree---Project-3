@@ -390,7 +390,7 @@ def main():
 
     run_audit(filename, 'frequency', 'unexpected', 'English')
     run_audit(filename, 'type', 'expected', 'French')
-    run_audit(filename, 'frequency', 'city')
+    run_audit(filename, 'frequency', 'city', 'French')
     run_count_tags_by_element()
     run_count_tags_by_char_content()
     run_list_users()
